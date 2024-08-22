@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmar Exclusão{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Confirmar Exclusão</h1>
+    <div class="card p-4 shadow-sm">
+        <p>Tem certeza de que deseja excluir esta ordem de produção?</p>
+        <p><strong>Data:</strong> {{ object.order_date|date:"d/m/Y" }}</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Sim, excluir</button>
+            <a href="{% url 'production_order_list' %}" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Produtos{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Lista de Produtos</h1>
+    <a href="{% url 'product_create' %}" class="btn btn-success mb-3">Novo Produto</a>
+
+    <table id="productTable" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Quantidade em Estoque</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>{{ product.name }}</td>
+                <td>{{ product.stock_quantity }}</td>
+                <td>
+                    <a href="{% url 'product_edit' product.id %}" class="btn btn-warning">Editar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Script para inicializar a DataTable -->
+<script>
+    $(document).ready(function() {
+        $('#productTable').DataTable({
+            responsive: true,
+            paging: true,
+            searching: true,
+            info: true,
+            ordering: true,
+            stateSave: true,
+            deferRender: true,
+            language: {
+                lengthMenu: "Mostrar _MENU_ por página",
+                search: "Pesquisa",
+                paginate: {
+                    first: "Primeiro",
+                    last: "Último",
+                    next: "Próximo",
+                    previous: "Anterior"
+                },
+                zeroRecords: "Nenhum registro encontrado",
+                infoEmpty: "Nenhum registro disponível",
+                info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                infoFiltered: "(filtrado de _MAX_ registros no total)"
+            }
+        });
+    });
+</script>
+{% endblock %}

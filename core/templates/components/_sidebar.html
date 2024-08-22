@@ -1,0 +1,37 @@
+<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">Menu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div>
+            <ul class="list-group">
+                <li class="list-group-item"><a class="nav-link" href="{% url 'product_list' %}">Produtos</a></li>
+                
+                <!-- Dropdown para Produção -->
+                <li class="list-group-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="productionDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Produção
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="productionDropdown">
+                        <li><a class="dropdown-item" href="{% url 'production_order_list' %}">Visualizar Produções Diárias</a></li>
+                        <li><a class="dropdown-item" href="{% url 'production_order_create' %}">Criar Nova Produção</a></li>
+                    </ul>
+                </li>
+                
+                <!-- Dropdown para Finalizados -->
+                <li class="list-group-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="finishedDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Fritos/Assados
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="finishedDropdown">
+                        <li><a class="dropdown-item" href="{% url 'finished_order_list' %}">Visualizar Fritos/Assados por Dia</a></li>
+                        <li><a class="dropdown-item" href="{% url 'finished_order_create' %}">Adicionar Novos Fritos/Assados</a></li>
+                    </ul>
+                </li>
+                
+                <!-- Outros links podem ser adicionados aqui -->
+            </ul>
+        </div>
+    </div>
+</div>
