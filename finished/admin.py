@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import FinishedOrder, FinishedProduct
 
-# Register your models here.
+admin.site.register(FinishedOrder)
+admin.site.register(FinishedProduct)
