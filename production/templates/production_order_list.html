@@ -40,6 +40,13 @@
             </tr>
             {% endfor %}
         </tbody>
+        <tfoot>
+            <tr>
+                <th class="text-center">Total Geral</th>
+                <th class="text-center" id="totalFooter" style="font-size: 20px;"></th>
+                <th></th>
+            </tr>
+        </tfoot>
     </table>
 </div>
 
@@ -72,6 +79,20 @@
                 infoEmpty: "Nenhum registro disponível",
                 info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
                 infoFiltered: "(filtrado de _MAX_ registros no total)"
+            },
+            footerCallback: function(row, data, start, end, display) {
+                var api = this.api();
+
+                // Calcula a soma da coluna "Total"
+                var total = api
+                    .column(1, { page: 'current' })
+                    .data()
+                    .reduce(function(a, b) {
+                        return a + parseFloat(b);
+                    }, 0);
+
+                // Atualiza o rodapé da tabela com a soma calculada
+                $(api.column(1).footer()).html(total);
             }
         });
     });

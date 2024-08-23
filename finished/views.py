@@ -4,7 +4,7 @@ from django.urls import reverse, reverse_lazy
 from products.models import Product
 from .models import FinishedOrder, FinishedProduct
 from .forms import FinishedOrderForm, FinishedOrderUpdateForm
-from datetime import date
+from django.utils import timezone
 import json
 
 class FinishedOrderListView(ListView):
@@ -52,7 +52,7 @@ class FinishedOrderCreateView(FormView):
     form_class = FinishedOrderForm
 
     def form_valid(self, form):
-        order = FinishedOrder.objects.create(finished_date=date.today())
+        order = FinishedOrder.objects.create(finished_date=timezone.now())
 
         selected_products = form.cleaned_data['products']
         for product in selected_products:

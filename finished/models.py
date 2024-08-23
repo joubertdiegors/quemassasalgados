@@ -1,9 +1,9 @@
 from django.db import models
 from products.models import Product
-from datetime import date
+from django.utils import timezone
 
 class FinishedOrder(models.Model):
-    finished_date = models.DateField(default=date.today)
+    finished_date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f'Finalizado em - {self.finished_date}'

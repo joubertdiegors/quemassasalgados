@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load tz %}
 
 {% block title %}Lista de Produtos Finalizados{% endblock %}
 
@@ -23,7 +24,7 @@
         <tbody>
             {% for item in orders_with_totals %}
             <tr>
-                <td class="text-center" style="font-size: 20px;">{{ item.order.finished_date|date:"d/m/Y" }}</td>
+                <td class="text-center" style="font-size: 20px;">{{ item.order.finished_date|localtime|date:"d/m/Y H:i:s" }}</td>
                 <td class="text-center" style="font-size: 20px;">{{ item.total_quantity }}</td>
                 <td>
                     <a href="{% url 'finished_order_detail' item.order.id %}" class="btn btn-info btn-sm mb-2" title="Ver Detalhes">
@@ -39,6 +40,13 @@
             </tr>
             {% endfor %}
         </tbody>
+        <tfoot>
+            <tr>
+                <th class="text-center">Total Geral</th>
+                <th class="text-center" id="totalFooter" style="font-size: 20px;"></th>
+                <th></th>
+            </tr>
+        </tfoot>
     </table>
 </div>
 
@@ -70,6 +78,20 @@
                 infoEmpty: "Nenhum registro disponível",
                 info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
                 infoFiltered: "(filtrado de _MAX_ registros no total)"
+            },
+            footerCallback: function(row, data, start, end, display) {
+                var api = this.api();
+
+                // Calcula a soma da coluna "Total"
+                var total = api
+                    .column(1, { page: 'current' })
+                    .data()
+                    .reduce(function(a, b) {
+                        return a + parseFloat(b);
+                    }, 0);
+
+                // Atualiza o rodapé da tabela com a soma calculada
+                $(api.column(1).footer()).html(total);
             }
         });
     });
