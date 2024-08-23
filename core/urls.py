@@ -11,6 +11,7 @@ handler404 = custom_404
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('dashboard/', include('dashboard.urls')),
 
     path('', include('products.urls')),
     path('', include('production.urls')),
