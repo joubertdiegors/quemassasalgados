@@ -29,7 +29,6 @@ def dashboard_view(request):
     totals_json = json.dumps(totals)
 
     context = {
-        'total_production': Production.objects.aggregate(total_units=Sum('quantity'))['total_units'] or 0,
         'total_finished': total_finished,
         'dates': dates_json,  # Passa como string JSON
         'totals': totals_json,  # Passa como string JSON

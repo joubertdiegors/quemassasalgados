@@ -5,24 +5,37 @@
 {% block content %}
 <div class="container mt-5">
     <h1 class="text-center mb-4">Dashboard</h1>
+
+    <!-- Filtros de data e dia da semana -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <label for="date_from">De:</label>
+            <input type="date" id="date_from" class="form-control">
+        </div>
+        <div class="col-md-3">
+            <label for="date_to">Até:</label>
+            <input type="date" id="date_to" class="form-control">
+        </div>
+        <div class="col-md-3">
+            <label for="weekday">Dia da Semana:</label>
+            <select id="weekday" class="form-control">
+                <option value="">Todos os dias</option>
+                <option value="0">Domingo</option>
+                <option value="1">Segunda-feira</option>
+                <option value="2">Terça-feira</option>
+                <option value="3">Quarta-feira</option>
+                <option value="4">Quinta-feira</option>
+                <option value="5">Sexta-feira</option>
+                <option value="6">Sábado</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button class="btn btn-primary mr-2" onclick="applyDateFilter()">Aplicar Filtro</button>
+            <button class="btn btn-secondary" onclick="resetFilters()">Limpar Filtros</button>
+        </div>
+    </div>
+
     <div class="row">
-        <div class="col-md-3">
-            <div class="card text-white bg-primary mb-3">
-                <div class="card-header">Produção Total</div>
-                <div class="card-body">
-                    <h4 class="card-title">{{ total_production }}</h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-success mb-3">
-                <div class="card-header">Produtos Finalizados</div>
-                <div class="card-body">
-                    <h4 class="card-title">{{ total_finished }}</h4>
-                </div>
-            </div>
-        </div>
-        <!-- Canvas para o gráfico -->
         <div class="row mt-5">
             <div class="col-md-12">
                 <canvas id="finishedChart"></canvas>
@@ -79,5 +92,49 @@
         },
         plugins: [ChartDataLabels]
     });
+
+    function applyDateFilter() {
+        var dateFrom = document.getElementById('date_from').value;
+        var dateTo = document.getElementById('date_to').value;
+        var weekday = document.getElementById('weekday').value;
+
+        // Convert strings to Date objects
+        var startDate = new Date(dateFrom);
+        var endDate = new Date(dateTo);
+
+        // Filter the dates and totals
+        var filteredDates = [];
+        var filteredTotals = [];
+
+        for (var i = 0; i < dates.length; i++) {
+            var currentDate = new Date(dates[i].split('/').reverse().join('-')); // Convertendo a string para Date
+            var currentWeekday = currentDate.getDay(); // Obtém o dia da semana (0=Domingo, 6=Sábado)
+
+            // Verifica se a data está no intervalo e se o dia da semana coincide (se selecionado)
+            if ((!isNaN(startDate) && currentDate >= startDate) && 
+                (!isNaN(endDate) && currentDate <= endDate) &&
+                (weekday === "" || currentWeekday == weekday)) {
+                filteredDates.push(dates[i]);
+                filteredTotals.push(totals[i]);
+            }
+        }
+
+        // Atualize o gráfico com os dados filtrados
+        finishedChart.data.labels = filteredDates;
+        finishedChart.data.datasets[0].data = filteredTotals;
+        finishedChart.update();
+    }
+
+    function resetFilters() {
+        // Limpar os campos de data e dia da semana
+        document.getElementById('date_from').value = '';
+        document.getElementById('date_to').value = '';
+        document.getElementById('weekday').value = '';
+
+        // Restaurar o gráfico com os dados originais
+        finishedChart.data.labels = dates;
+        finishedChart.data.datasets[0].data = totals;
+        finishedChart.update();
+    }
 </script>
 {% endblock %}
