@@ -38,11 +38,14 @@
     function toggleQuantityInput(productId) {
         var checkbox = document.getElementById('product_' + productId);
         var quantityInputContainer = document.getElementById('quantity_' + productId + '_container');
+        var quantityInput = document.getElementById('quantity_input_' + productId);
+
         if (checkbox.checked) {
             quantityInputContainer.style.display = 'block';
+            quantityInput.focus();
         } else {
             quantityInputContainer.style.display = 'none';
-            document.getElementById('quantity_input_' + productId).value = "";  // Clear the input value when checkbox is unchecked
+            quantityInput.value = "";  // Limpa o valor do input quando o checkbox é desmarcado
         }
     }
 </script>
