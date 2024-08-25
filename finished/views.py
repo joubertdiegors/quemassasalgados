@@ -43,8 +43,8 @@ class FinishedOrderDetailView(DetailView):
         for product in finished_products:
             finished_data.append({
                 'product': product.product.name,
-                'quantity': product.quantity
-                # Removido o campo 'date', pois não existe mais em FinishedProduct
+                'quantity': product.quantity,
+                'date': product.finished_date
             })
             total_quantity += product.quantity
 
@@ -116,74 +116,108 @@ def finished_order_update_view(request, pk):
 
 def finished_order_upload(request):
     if request.method == 'POST':
+        print("Formulário submetido via POST.")
 
         # Verifica se o arquivo foi enviado
         if 'csv_file' not in request.FILES:
+            print("Nenhum arquivo foi enviado.")
             messages.error(request, 'Nenhum arquivo foi enviado.')
             return redirect('finished_order_upload')
 
         csv_file = request.FILES['csv_file']
+        print(f"Arquivo recebido: {csv_file.name}")
 
         if not csv_file.name.endswith('.csv'):
+            print("O arquivo enviado não é um .csv")
             messages.error(request, 'Por favor, envie um arquivo .csv.')
             return redirect('finished_order_upload')
 
         try:
             file_data = csv_file.read().decode('utf-8').splitlines()
+            print(f"Arquivo lido com sucesso, número de linhas: {len(file_data)}")
 
             # Remover BOM da primeira linha se estiver presente
             if file_data[0].startswith('\ufeff'):
                 file_data[0] = file_data[0].replace('\ufeff', '')
+                print("BOM removido da primeira linha.")
 
             csv_reader = csv.reader(file_data, delimiter=';')
 
             current_order = None
+            finished_date = None
 
             for row in csv_reader:
+                print(f"Processando linha: {row}")
 
+                # Ignorar linhas vazias
                 if not any(row):
-                    # Linha é delimitador de bloco de FinishedOrder (dois pontos e vírgula)
+                    print("Encontrado delimitador de bloco ou linha vazia, finalizando o bloco atual.")
                     current_order = None
+                    finished_date = None
                     continue
 
-                if len(row) == 2 and row[0] and row[1] and row[0].count('-') == 2 and row[1].count(':') == 2:
-                    # Linha é a data e hora da FinishedOrder
-                    naive_datetime = datetime.strptime(f"{row[0]} {row[1]}", '%Y-%m-%d %H:%M:%S')
-                    finished_date = make_aware(naive_datetime)
-                    current_order = FinishedOrder.objects.create(finished_date=finished_date)
-                elif len(row) == 2 and current_order:
-                    # Linha é um FinishedProduct
-                    product_id, quantity = row
+                # Verificar se a linha é de FinishedOrder (data e hora)
+                if len(row) == 2 and row[0].count('-') == 2 and row[1].count(':') == 2:
+                    print(f"Tentando processar a data e hora: {row[0]} {row[1]}")
+                    try:
+                        finished_datetime = make_aware(datetime.strptime(f"{row[0]} {row[1]}", '%Y-%m-%d %H:%M:%S'))
+                        finished_date = finished_datetime.date()  # Extrai apenas a data
+                        current_order = FinishedOrder.objects.create(finished_date=finished_datetime)
+                        print(f"FinishedOrder criado com data: {finished_date}")
+                    except ValueError as e:
+                        print(f"Erro ao processar a data e hora '{row[0]} {row[1]}': {e}")
+                        messages.error(request, f"Erro ao processar a data e hora '{row[0]} {row[1]}': {e}")
+                        return redirect('finished_order_upload')
+                
+                # Verificar se a linha é de FinishedProduct
+                elif len(row) >= 2 and current_order:
+                    product_id, quantity = row[0], row[1]
 
-                    # Verifica se a linha não é vazia
+                    # Se o FinishedProduct não tiver uma data, use a data da FinishedOrder
+                    if len(row) == 3 and row[2]:
+                        product_date = row[2]
+                    else:
+                        product_date = finished_date
+
+                    if quantity.strip() == "":
+                        print(f"Quantidade em branco para o produto ID {product_id}, linha ignorada.")
+                        continue
+
                     if product_id.isdigit() and quantity.isdigit():
-                        # Buscar o produto pelo ID
                         try:
                             product = Product.objects.get(id=product_id)
+                            print(f"Produto encontrado: {product.name}")
                         except Product.DoesNotExist:
+                            print(f"Produto com ID {product_id} não encontrado.")
                             messages.error(request, f'Produto com ID {product_id} não encontrado.')
                             continue
 
-                        # Criar o FinishedProduct e associá-lo à FinishedOrder
                         FinishedProduct.objects.create(
                             order=current_order,
                             product=product,
-                            quantity=int(quantity)
+                            quantity=int(quantity),
+                            finished_date=product_date
                         )
+                        print(f"FinishedProduct criado: {product.name}, quantidade: {quantity}, data: {product_date}")
                     else:
+                        print(f"Produto ID {product_id} ignorado devido à quantidade inválida ou em branco.")
                         continue
 
                 else:
+                    print(f"Formato inválido na linha: {row}")
                     messages.error(request, f'Formato inválido na linha: {";".join(row)}')
                     continue
 
             messages.success(request, 'Produtos finalizados foram adicionados com sucesso!')
+            print("Produtos finalizados foram adicionados com sucesso!")
         except Exception as e:
+            print(f"Erro ao processar o arquivo: {e}")
             messages.error(request, f'Houve um erro ao processar o arquivo: {e}')
             return redirect('finished_order_upload')
 
         return redirect('finished_order_list')
 
+    print("GET request - renderizando o template de upload.")
     return render(request, 'finished_order_upload.html')
 
 class FinishedOrderDeleteView(DeleteView):
