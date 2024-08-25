@@ -37,7 +37,7 @@
 
     <div class="row">
         <div class="row mt-5">
-            <div class="col-md-12">
+            <div class="col-md-12 chart-container">
                 <canvas id="finishedChart"></canvas>
             </div>
         </div>
@@ -45,9 +45,13 @@
 </div>
 
 <style>
+    .chart-container {
+        width: 100%;
+        overflow-x: auto; /* Permite rolagem horizontal se necessário */
+    }
     #finishedChart {
         width: 100% !important;
-        height: auto;
+        height: auto; /* Mantém a altura automática */
     }
 </style>
 
@@ -67,7 +71,11 @@
                 data: totals,  // Usando os dados convertidos
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
                 borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
+                borderWidth: 1,
+                barThickness: 25,    // Define uma espessura fixa para as barras
+                maxBarThickness: 30, // Limita a espessura máxima das barras
+                categoryPercentage: 0.8, // Define a largura do grupo de barras (de 0 a 1)
+                barPercentage: 0.9  // Define a largura de cada barra (de 0 a 1)
             }]
         },
         options: {
@@ -101,6 +109,10 @@
         },
         plugins: [ChartDataLabels]
     });
+
+    // Ajuste dinâmico da altura do canvas baseado no número de barras
+    var canvasHeight = dates.length * 50; // Define 50px de altura por barra
+    document.getElementById('finishedChart').style.height = canvasHeight + 'px';
 
     function applyDateFilter() {
         var dateFrom = document.getElementById('date_from').value;
