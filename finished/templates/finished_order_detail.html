@@ -7,7 +7,8 @@
     <h1 class="text-center mb-4">Resumo de Produtos Finalizados</h1>
 
     <div class="card p-4 shadow-sm">
-        <h5 class="mb-3">Salgados Que Massa {{ finished_data.0.date|date:"d/m/Y" }}</h5>
+        <!-- Exibe a data do FinishedOrder -->
+        <h5 class="mb-3">Salgados Que Massa {{ finished_order.finished_date|date:"d/m/Y" }}</h5>
         <ul id="finished-summary-list" class="list-group mb-4">
             {% for item in finished_data %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -28,7 +29,8 @@
 <script>
     function copyToClipboard() {
         var text = 'Salgados Que Massa\n';
-        text += '{{ finished_data.0.date|date:"d/m/Y" }}\n\n';
+        // Usa a data do FinishedOrder
+        text += '{{ finished_order.finished_date|date:"d/m/Y" }}\n\n';
 
         var listItems = document.querySelectorAll('#finished-summary-list li');
         listItems.forEach(function(item) {

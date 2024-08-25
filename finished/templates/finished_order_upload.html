@@ -8,8 +8,8 @@
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="form-group">
-            <label for="txt_file">Arquivo TXT:</label>
-            <input type="file" class="form-control-file" id="txt_file" name="txt_file" accept=".txt" required>
+            <label for="csv_file">Arquivo CSV:</label>
+            <input type="file" class="form-control-file" id="csv_file" name="csv_file" accept=".csv" required>
         </div>
         <button type="submit" class="btn btn-primary mt-3">Enviar</button>
     </form>

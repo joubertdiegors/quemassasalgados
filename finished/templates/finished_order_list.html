@@ -24,7 +24,9 @@
         <tbody>
             {% for item in orders_with_totals %}
             <tr>
-                <td class="text-center" style="font-size: 20px;">{{ item.order.finished_date|localtime|date:"d/m/Y H:i:s" }}</td>
+                <td class="text-center" style="font-size: 20px;" data-order="{{ item.order.finished_date|date:'Y-m-d H:i:s' }}">
+                    {{ item.order.finished_date|localtime|date:"d/m/Y H:i:s" }}
+                </td>
                 <td class="text-center" style="font-size: 20px;">{{ item.total_quantity }}</td>
                 <td>
                     <a href="{% url 'finished_order_detail' item.order.id %}" class="btn btn-info btn-sm mb-2" title="Ver Detalhes">
