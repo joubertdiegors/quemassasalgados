@@ -46,8 +46,8 @@
 
 <style>
     #finishedChart {
-        max-width: 100%;
-        height: 400px; /* ou qualquer altura que você prefira */
+        width: 100% !important;
+        height: auto;
     }
 </style>
 
@@ -71,6 +71,7 @@
             }]
         },
         options: {
+            indexAxis: 'y',
             plugins: {
                 datalabels: {
                     align: 'end', // Alinhamento do texto
@@ -85,10 +86,18 @@
                 }
             },
             scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        padding: 25, // Adiciona espaço extra entre os valores e a borda do gráfico
+                    },
+                    grid: {
+                        offset: true // Garante que as barras tenham espaço no final
+                    }
+                },
+            },
+            maintainAspectRatio: false,
+            responsive: true,
         },
         plugins: [ChartDataLabels]
     });
