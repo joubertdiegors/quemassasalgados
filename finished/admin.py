@@ -11,7 +11,6 @@ class FinishedOrderAdmin(admin.ModelAdmin):
     inlines = [FinishedProductInline]
     list_display = ['finished_date']
     search_fields = ['finished_date']
-    date_hierarchy = 'finished_date'
 
 admin.site.register(FinishedOrder, FinishedOrderAdmin)
 admin.site.register(FinishedProduct)

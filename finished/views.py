@@ -1,5 +1,6 @@
 from django.views.generic import ListView, DetailView, FormView, DeleteView
 from django.shortcuts import redirect, render, get_object_or_404
+from django.contrib import messages
 from django.urls import reverse, reverse_lazy
 from products.models import Product
 from .models import FinishedOrder, FinishedProduct
@@ -109,6 +110,37 @@ def finished_order_update_view(request, pk):
 
     return render(request, 'finished_order_update.html', context)
 
+def finished_order_upload(request):
+    if request.method == 'POST':
+        txt_file = request.FILES['txt_file']
+
+        if not txt_file.name.endswith('.txt'):
+            messages.error(request, 'Por favor, envie um arquivo .txt.')
+            return redirect('finished_order_upload')
+
+        file_data = txt_file.read().decode('utf-8')
+        lines = file_data.splitlines()
+
+        try:
+            finished_order = FinishedOrder.objects.create(finished_date=timezone.now())
+            for line in lines:
+                # Esperando que cada linha seja: product_id quantidade data (exemplo: 1 10 2024-08-24)
+                product_id, quantity, finished_date = line.split()
+                product = Product.objects.get(id=product_id)
+                FinishedProduct.objects.create(
+                    order=finished_order,
+                    product=product,
+                    quantity=int(quantity),
+                    finished_date=finished_date
+                )
+            messages.success(request, 'Produtos finalizados foram adicionados com sucesso!')
+        except Exception as e:
+            messages.error(request, f'Houve um erro ao processar o arquivo: {e}')
+            return redirect('finished_order_upload')
+
+        return redirect('finished_order_list')
+
+    return render(request, 'finished_order_upload.html')
 
 class FinishedOrderDeleteView(DeleteView):
     model = FinishedOrder

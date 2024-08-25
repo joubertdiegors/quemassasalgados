@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload de Produtos Finalizados{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Upload de Produtos Finalizados</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="txt_file">Arquivo TXT:</label>
+            <input type="file" class="form-control-file" id="txt_file" name="txt_file" accept=".txt" required>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Enviar</button>
+    </form>
+</div>
+{% endblock %}
