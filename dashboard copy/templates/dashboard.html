@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Dashboard</h1>
+
+    <!-- Filtros de data e dia da semana -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <label for="date_from">De:</label>
+            <input type="date" id="date_from" class="form-control">
+        </div>
+        <div class="col-md-3">
+            <label for="date_to">Até:</label>
+            <input type="date" id="date_to" class="form-control">
+        </div>
+        <div class="col-md-3">
+            <label for="weekday">Dia da Semana:</label>
+            <select id="weekday" class="form-control">
+                <option value="">Todos os dias</option>
+                <option value="0">Domingo</option>
+                <option value="1">Segunda-feira</option>
+                <option value="2">Terça-feira</option>
+                <option value="3">Quarta-feira</option>
+                <option value="4">Quinta-feira</option>
+                <option value="5">Sexta-feira</option>
+                <option value="6">Sábado</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button class="btn btn-primary mr-2" onclick="applyDateFilter()">Aplicar Filtro</button>
+            <button class="btn btn-secondary" onclick="resetFilters()">Limpar Filtros</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="row mt-5">
+            <div class="col-md-12 chart-container">
+                <canvas id="finishedChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .chart-container {
+        width: 100%;
+        overflow-x: auto; /* Permite rolagem horizontal se necessário */
+    }
+    #finishedChart {
+        width: 100% !important;
+        height: auto; /* Mantém a altura automática */
+    }
+</style>
+
+<!-- Script para inicializar o gráfico e configurar as datas -->
+<script>
+    window.onload = function() {
+        var today = new Date();
+
+        // Define o primeiro dia do mês corrente
+        var firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+        // Define o último dia do mês corrente
+        var lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+        // Função para formatar a data manualmente para o formato YYYY-MM-DD
+        function formatDate(date) {
+            var year = date.getFullYear();
+            var month = ('0' + (date.getMonth() + 1)).slice(-2); // Adiciona zero à esquerda se necessário
+            var day = ('0' + date.getDate()).slice(-2); // Adiciona zero à esquerda se necessário
+            return year + '-' + month + '-' + day;
+        }
+
+        var formattedFirstDay = formatDate(firstDayOfMonth);
+        var formattedLastDay = formatDate(lastDayOfMonth);
+
+        // Preenche os inputs com as datas formatadas
+        document.getElementById('date_from').value = formattedFirstDay;
+        document.getElementById('date_to').value = formattedLastDay;
+
+        // Aplica o filtro automaticamente com as datas selecionadas
+        applyDateFilter();
+    };
+
+    // Use JSON.parse para garantir que os dados sejam convertidos corretamente para arrays JavaScript
+    var dates = JSON.parse('{{ dates|escapejs }}');
+    var totals = JSON.parse('{{ totals|escapejs }}');
+
+    function adjustChartHeight(chart, labels) {
+        var minBars = 5;  // Número mínimo de barras para determinar a altura do gráfico
+        var barHeight = 50; // Altura de cada barra em pixels
+        var minHeight = minBars * barHeight; // Altura mínima do gráfico
+        var dynamicHeight = labels.length * barHeight; // Altura dinâmica baseada no número de barras
+        var finalHeight = Math.max(minHeight, dynamicHeight); // Escolhe a maior entre a altura mínima e a dinâmica
+        chart.canvas.parentNode.style.height = finalHeight + 'px';
+    }
+
+    var ctx = document.getElementById('finishedChart').getContext('2d');
+    var finishedChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: dates,  // Usando os dados convertidos
+            datasets: [{
+                label: 'Produtos Finalizados por Dia',
+                data: totals,  // Usando os dados convertidos
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+                barThickness: 'flex',    // Ajusta dinamicamente a espessura da barra
+                maxBarThickness: 50, // Limita a espessura máxima das barras
+                categoryPercentage: 0.8, // Define a largura do grupo de barras (de 0 a 1)
+                barPercentage: 0.9  // Define a largura de cada barra (de 0 a 1)
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            plugins: {
+                datalabels: {
+                    align: 'end', // Alinhamento do texto
+                    anchor: 'start', // Posição do texto
+                    color: 'black', // Cor do texto
+                    font: {
+                        weight: 'bold' // Negrito para destaque
+                    },
+                    formatter: function(value, context) {
+                        return value; // Mostra o valor do total
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        padding: 25, // Adiciona espaço extra entre os valores e a borda do gráfico
+                    },
+                    grid: {
+                        offset: true // Garante que as barras tenham espaço no final
+                    }
+                },
+            },
+            maintainAspectRatio: false,
+            responsive: true,
+        },
+        plugins: [ChartDataLabels]
+    });
+
+    // Ajuste dinâmico da altura do gráfico
+    adjustChartHeight(finishedChart, dates);
+
+    function applyDateFilter() {
+        var dateFrom = document.getElementById('date_from').value;
+        var dateTo = document.getElementById('date_to').value;
+        var weekday = document.getElementById('weekday').value;
+
+        // Convert strings to Date objects
+        var startDate = new Date(dateFrom);
+        var endDate = new Date(dateTo);
+
+        // Filter the dates and totals
+        var filteredDates = [];
+        var filteredTotals = [];
+
+        for (var i = 0; i < dates.length; i++) {
+            var currentDate = new Date(dates[i].split('/').reverse().join('-')); // Convertendo a string para Date
+            var currentWeekday = currentDate.getDay(); // Obtém o dia da semana (0=Domingo, 6=Sábado)
+
+            // Verifica se a data está no intervalo e se o dia da semana coincide (se selecionado)
+            if ((!isNaN(startDate) && currentDate >= startDate) && 
+                (!isNaN(endDate) && currentDate <= endDate) &&
+                (weekday === "" || currentWeekday == weekday)) {
+                filteredDates.push(dates[i]);
+                filteredTotals.push(totals[i]);
+            }
+        }
+
+        // Atualize o gráfico com os dados filtrados
+        finishedChart.data.labels = filteredDates;
+        finishedChart.data.datasets[0].data = filteredTotals;
+        finishedChart.update();
+
+        // Ajustar a altura do gráfico após o filtro
+        adjustChartHeight(finishedChart, filteredDates);
+    }
+
+    function resetFilters() {
+        // Limpar os campos de data e dia da semana
+        document.getElementById('date_from').value = '';
+        document.getElementById('date_to').value = '';
+        document.getElementById('weekday').value = '';
+
+        // Restaurar o gráfico com os dados originais
+        finishedChart.data.labels = dates;
+        finishedChart.data.datasets[0].data = totals;
+        finishedChart.update();
+
+        // Ajustar a altura do gráfico após o reset
+        adjustChartHeight(finishedChart, dates);
+    }
+</script>
+{% endblock %}

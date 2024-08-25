@@ -8,9 +8,9 @@ from .forms import FinishedOrderForm, FinishedOrderUpdateForm
 from django.utils import timezone
 from datetime import datetime
 from django.utils.timezone import make_aware
+from django.http import HttpResponseRedirect
 import json
 import csv
-import re
 
 class FinishedOrderListView(ListView):
     model = FinishedOrder
@@ -77,8 +77,6 @@ def finished_order_update_view(request, pk):
     products = Product.objects.all()
     finished_products = order.finished_products.all()
 
-    product_quantities = {prod.product.id: prod.quantity for prod in finished_products}
-
     if request.method == 'POST':
         selected_products = request.POST.getlist('products')
         quantities = {}
@@ -92,11 +90,17 @@ def finished_order_update_view(request, pk):
                 except ValueError:
                     continue
 
-        FinishedProduct.objects.filter(order=order).delete()
-
+        # Atualize ou crie os FinishedProducts
         for product_id in selected_products:
             quantity = quantities.get(int(product_id), 0)
-            if quantity > 0:
+            finished_product = FinishedProduct.objects.filter(order=order, product_id=product_id).first()
+            
+            if finished_product:
+                # Atualiza o existente
+                finished_product.quantity = quantity
+                finished_product.save()
+            else:
+                # Cria um novo se não existir
                 FinishedProduct.objects.create(
                     order=order,
                     product_id=product_id,
@@ -105,6 +109,8 @@ def finished_order_update_view(request, pk):
                 )
 
         return redirect('finished_order_detail', pk=order.pk)
+
+    product_quantities = {prod.product.id: prod.quantity for prod in finished_products}
 
     context = {
         'order': order,
@@ -224,3 +230,17 @@ class FinishedOrderDeleteView(DeleteView):
     model = FinishedOrder
     template_name = 'finished_order_confirm_delete.html'
     success_url = reverse_lazy('finished_order_list')
+
+    def form_valid(self, form):
+        # Obter o FinishedOrder que será deletado
+        finished_order = self.get_object()
+
+        # Iterar sobre todos os FinishedProduct associados e deletar cada um
+        for finished_product in finished_order.finished_products.all():
+            finished_product.delete()  # Chama o delete customizado que ajusta o estoque
+
+        # Agora, deletar a FinishedOrder
+        finished_order.delete()
+
+        # Redirecionar após a exclusão
+        return HttpResponseRedirect(self.success_url)

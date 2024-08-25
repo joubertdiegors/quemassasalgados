@@ -15,7 +15,7 @@ class ProductionOrderForm(forms.Form):
             self.fields[f'quantity_{product.id}'] = forms.IntegerField(
                 min_value=1,
                 initial=1,
-                required=False,  # Torna o campo não obrigatório
+                required=False,
                 label=f'Quantidade para {product.name}'
             )
 
@@ -26,7 +26,7 @@ class ProductionOrderForm(forms.Form):
         for product in selected_products:
             quantity_field = f'quantity_{product.id}'
             quantity = cleaned_data.get(quantity_field)
-            if not quantity:  # Verifica se o campo foi preenchido
+            if not quantity:
                 self.add_error(quantity_field, 'Este campo é obrigatório para o produto selecionado.')
 
         return cleaned_data
@@ -48,12 +48,9 @@ class ProductionOrderUpdateForm(forms.ModelForm):
             selected_products = self.instance.productions.all()
             self.fields['products'].initial = [prod.product for prod in selected_products]
             
-            print("Selected Products: ", selected_products)  # Depuração
-            
             for product in self.fields['products'].queryset:
                 field_name = f'quantity_{product.id}'
                 initial_quantity = next((prod.quantity for prod in selected_products if prod.product.id == product.id), 1)
-                print(f"Product: {product.name}, Initial Quantity: {initial_quantity}")  # Depuração
                 self.fields[field_name] = forms.IntegerField(
                     initial=initial_quantity,
                     min_value=1,
@@ -68,7 +65,7 @@ class ProductionOrderUpdateForm(forms.ModelForm):
         for product in selected_products:
             quantity_field = f'quantity_{product.id}'
             quantity = cleaned_data.get(quantity_field)
-            if not quantity:  # Verifica se o campo foi preenchido
+            if not quantity:
                 self.add_error(quantity_field, 'Este campo é obrigatório para o produto selecionado.')
 
         return cleaned_data

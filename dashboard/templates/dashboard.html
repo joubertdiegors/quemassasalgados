@@ -35,10 +35,30 @@
         </div>
     </div>
 
+    <!-- Checkboxes para selecionar o que deve ser exibido no gráfico -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="produced" id="showProduced" checked>
+                <label class="form-check-label" for="showProduced">
+                    Mostrar Produtos Produzidos
+                </label>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="finished" id="showFinished" checked>
+                <label class="form-check-label" for="showFinished">
+                    Mostrar Produtos Finalizados
+                </label>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="row mt-5">
             <div class="col-md-12 chart-container">
-                <canvas id="finishedChart"></canvas>
+                <canvas id="productionFinishedChart"></canvas>
             </div>
         </div>
     </div>
@@ -49,7 +69,7 @@
         width: 100%;
         overflow-x: auto; /* Permite rolagem horizontal se necessário */
     }
-    #finishedChart {
+    #productionFinishedChart {
         width: 100% !important;
         height: auto; /* Mantém a altura automática */
     }
@@ -57,6 +77,9 @@
 
 <!-- Script para inicializar o gráfico e configurar as datas -->
 <script>
+    // Defina as variáveis no escopo global
+    var dates, producedTotals, finishedTotals, productionFinishedChart;
+
     window.onload = function() {
         var today = new Date();
 
@@ -66,11 +89,10 @@
         // Define o último dia do mês corrente
         var lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-        // Função para formatar a data manualmente para o formato YYYY-MM-DD
         function formatDate(date) {
             var year = date.getFullYear();
-            var month = ('0' + (date.getMonth() + 1)).slice(-2); // Adiciona zero à esquerda se necessário
-            var day = ('0' + date.getDate()).slice(-2); // Adiciona zero à esquerda se necessário
+            var month = ('0' + (date.getMonth() + 1)).slice(-2);
+            var day = ('0' + date.getDate()).slice(-2);
             return year + '-' + month + '-' + day;
         }
 
@@ -81,79 +103,96 @@
         document.getElementById('date_from').value = formattedFirstDay;
         document.getElementById('date_to').value = formattedLastDay;
 
+        // Inicializar as variáveis globais com os dados do template
+        dates = JSON.parse('{{ dates|escapejs }}');
+        producedTotals = JSON.parse('{{ produced_totals|escapejs }}');
+        finishedTotals = JSON.parse('{{ finished_totals|escapejs }}');
+
+        var ctx = document.getElementById('productionFinishedChart').getContext('2d');
+        productionFinishedChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'Produtos Produzidos por Dia',
+                        data: producedTotals,
+                        backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1,
+                        barThickness: 'flex',
+                        maxBarThickness: 50,
+                        categoryPercentage: 0.8,
+                        barPercentage: 0.9
+                    },
+                    {
+                        label: 'Produtos Finalizados por Dia',
+                        data: finishedTotals,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        barThickness: 'flex',
+                        maxBarThickness: 50,
+                        categoryPercentage: 0.8,
+                        barPercentage: 0.9
+                    },
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                plugins: {
+                    datalabels: {
+                        align: 'end',
+                        anchor: 'start',
+                        color: 'black',
+                        font: {
+                            weight: 'bold'
+                        },
+                        formatter: function(value, context) {
+                            return value;
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            padding: 25,
+                        },
+                        grid: {
+                            offset: true
+                        }
+                    },
+                },
+                maintainAspectRatio: false,
+                responsive: true,
+            },
+            plugins: [ChartDataLabels]
+        });
+        
+        adjustChartHeight(productionFinishedChart, dates);
+
         // Aplica o filtro automaticamente com as datas selecionadas
         applyDateFilter();
     };
 
-    // Use JSON.parse para garantir que os dados sejam convertidos corretamente para arrays JavaScript
-    var dates = JSON.parse('{{ dates|escapejs }}');
-    var totals = JSON.parse('{{ totals|escapejs }}');
-
     function adjustChartHeight(chart, labels) {
-        var minBars = 5;  // Número mínimo de barras para determinar a altura do gráfico
-        var barHeight = 50; // Altura de cada barra em pixels
-        var minHeight = minBars * barHeight; // Altura mínima do gráfico
-        var dynamicHeight = labels.length * barHeight; // Altura dinâmica baseada no número de barras
-        var finalHeight = Math.max(minHeight, dynamicHeight); // Escolhe a maior entre a altura mínima e a dinâmica
+        var minBars = 5;
+        var barHeight = 50;
+        var minHeight = minBars * barHeight;
+        var dynamicHeight = labels.length * barHeight;
+        var finalHeight = Math.max(minHeight, dynamicHeight);
         chart.canvas.parentNode.style.height = finalHeight + 'px';
     }
-
-    var ctx = document.getElementById('finishedChart').getContext('2d');
-    var finishedChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: dates,  // Usando os dados convertidos
-            datasets: [{
-                label: 'Produtos Finalizados por Dia',
-                data: totals,  // Usando os dados convertidos
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1,
-                barThickness: 'flex',    // Ajusta dinamicamente a espessura da barra
-                maxBarThickness: 50, // Limita a espessura máxima das barras
-                categoryPercentage: 0.8, // Define a largura do grupo de barras (de 0 a 1)
-                barPercentage: 0.9  // Define a largura de cada barra (de 0 a 1)
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            plugins: {
-                datalabels: {
-                    align: 'end', // Alinhamento do texto
-                    anchor: 'start', // Posição do texto
-                    color: 'black', // Cor do texto
-                    font: {
-                        weight: 'bold' // Negrito para destaque
-                    },
-                    formatter: function(value, context) {
-                        return value; // Mostra o valor do total
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    ticks: {
-                        padding: 25, // Adiciona espaço extra entre os valores e a borda do gráfico
-                    },
-                    grid: {
-                        offset: true // Garante que as barras tenham espaço no final
-                    }
-                },
-            },
-            maintainAspectRatio: false,
-            responsive: true,
-        },
-        plugins: [ChartDataLabels]
-    });
-
-    // Ajuste dinâmico da altura do gráfico
-    adjustChartHeight(finishedChart, dates);
 
     function applyDateFilter() {
         var dateFrom = document.getElementById('date_from').value;
         var dateTo = document.getElementById('date_to').value;
         var weekday = document.getElementById('weekday').value;
+
+        // Verifica quais checkboxes estão marcados
+        var showProduced = document.getElementById('showProduced').checked;
+        var showFinished = document.getElementById('showFinished').checked;
 
         // Convert strings to Date objects
         var startDate = new Date(dateFrom);
@@ -161,43 +200,94 @@
 
         // Filter the dates and totals
         var filteredDates = [];
-        var filteredTotals = [];
+        var filteredProducedTotals = [];
+        var filteredFinishedTotals = [];
 
         for (var i = 0; i < dates.length; i++) {
-            var currentDate = new Date(dates[i].split('/').reverse().join('-')); // Convertendo a string para Date
-            var currentWeekday = currentDate.getDay(); // Obtém o dia da semana (0=Domingo, 6=Sábado)
+            var currentDate = new Date(dates[i].split('/').reverse().join('-'));
+            var currentWeekday = currentDate.getDay();
 
-            // Verifica se a data está no intervalo e se o dia da semana coincide (se selecionado)
-            if ((!isNaN(startDate) && currentDate >= startDate) && 
+            if ((!isNaN(startDate) && currentDate >= startDate) &&
                 (!isNaN(endDate) && currentDate <= endDate) &&
                 (weekday === "" || currentWeekday == weekday)) {
+                
                 filteredDates.push(dates[i]);
-                filteredTotals.push(totals[i]);
+                filteredProducedTotals.push(producedTotals[i]);
+                filteredFinishedTotals.push(finishedTotals[i]);
             }
         }
 
-        // Atualize o gráfico com os dados filtrados
-        finishedChart.data.labels = filteredDates;
-        finishedChart.data.datasets[0].data = filteredTotals;
-        finishedChart.update();
+        // Atualizar o gráfico conforme as seleções
+        productionFinishedChart.data.labels = filteredDates;
+        productionFinishedChart.data.datasets = [];
 
-        // Ajustar a altura do gráfico após o filtro
-        adjustChartHeight(finishedChart, filteredDates);
+        if (showProduced) {
+            productionFinishedChart.data.datasets.push({
+                label: 'Produtos Produzidos por Dia',
+                data: filteredProducedTotals,
+                backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1,
+                barThickness: 'flex',
+                maxBarThickness: 50,
+                categoryPercentage: 0.8,
+                barPercentage: 0.9
+            });
+        }
+
+        if (showFinished) {
+            productionFinishedChart.data.datasets.push({
+                label: 'Produtos Finalizados por Dia',
+                data: filteredFinishedTotals,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+                barThickness: 'flex',
+                maxBarThickness: 50,
+                categoryPercentage: 0.8,
+                barPercentage: 0.9
+            });
+        }
+
+        productionFinishedChart.update();
+        adjustChartHeight(productionFinishedChart, filteredDates);
     }
 
     function resetFilters() {
-        // Limpar os campos de data e dia da semana
         document.getElementById('date_from').value = '';
         document.getElementById('date_to').value = '';
         document.getElementById('weekday').value = '';
+        document.getElementById('showProduced').checked = true;
+        document.getElementById('showFinished').checked = true;
 
-        // Restaurar o gráfico com os dados originais
-        finishedChart.data.labels = dates;
-        finishedChart.data.datasets[0].data = totals;
-        finishedChart.update();
+        productionFinishedChart.data.labels = dates;
+        productionFinishedChart.data.datasets = [
+            {
+                label: 'Produtos Produzidos por Dia',
+                data: producedTotals,
+                backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1,
+                barThickness: 'flex',
+                maxBarThickness: 50,
+                categoryPercentage: 0.8,
+                barPercentage: 0.9
+            },
+            {
+                label: 'Produtos Finalizados por Dia',
+                data: finishedTotals,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+                barThickness: 'flex',
+                maxBarThickness: 50,
+                categoryPercentage: 0.8,
+                barPercentage: 0.9
+            }
+        ];
 
-        // Ajustar a altura do gráfico após o reset
-        adjustChartHeight(finishedChart, dates);
+        productionFinishedChart.update();
+        adjustChartHeight(productionFinishedChart, dates);
     }
 </script>
 {% endblock %}
