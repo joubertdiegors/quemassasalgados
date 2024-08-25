@@ -55,11 +55,48 @@
     }
 </style>
 
-<!-- Script para inicializar o gráfico -->
+<!-- Script para inicializar o gráfico e configurar as datas -->
 <script>
+    window.onload = function() {
+        var today = new Date();
+
+        // Define o primeiro dia do mês corrente
+        var firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+        // Define o último dia do mês corrente
+        var lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+        // Função para formatar a data manualmente para o formato YYYY-MM-DD
+        function formatDate(date) {
+            var year = date.getFullYear();
+            var month = ('0' + (date.getMonth() + 1)).slice(-2); // Adiciona zero à esquerda se necessário
+            var day = ('0' + date.getDate()).slice(-2); // Adiciona zero à esquerda se necessário
+            return year + '-' + month + '-' + day;
+        }
+
+        var formattedFirstDay = formatDate(firstDayOfMonth);
+        var formattedLastDay = formatDate(lastDayOfMonth);
+
+        // Preenche os inputs com as datas formatadas
+        document.getElementById('date_from').value = formattedFirstDay;
+        document.getElementById('date_to').value = formattedLastDay;
+
+        // Aplica o filtro automaticamente com as datas selecionadas
+        applyDateFilter();
+    };
+
     // Use JSON.parse para garantir que os dados sejam convertidos corretamente para arrays JavaScript
     var dates = JSON.parse('{{ dates|escapejs }}');
     var totals = JSON.parse('{{ totals|escapejs }}');
+
+    function adjustChartHeight(chart, labels) {
+        var minBars = 5;  // Número mínimo de barras para determinar a altura do gráfico
+        var barHeight = 50; // Altura de cada barra em pixels
+        var minHeight = minBars * barHeight; // Altura mínima do gráfico
+        var dynamicHeight = labels.length * barHeight; // Altura dinâmica baseada no número de barras
+        var finalHeight = Math.max(minHeight, dynamicHeight); // Escolhe a maior entre a altura mínima e a dinâmica
+        chart.canvas.parentNode.style.height = finalHeight + 'px';
+    }
 
     var ctx = document.getElementById('finishedChart').getContext('2d');
     var finishedChart = new Chart(ctx, {
@@ -72,8 +109,8 @@
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
                 borderColor: 'rgba(75, 192, 192, 1)',
                 borderWidth: 1,
-                barThickness: 25,    // Define uma espessura fixa para as barras
-                maxBarThickness: 30, // Limita a espessura máxima das barras
+                barThickness: 'flex',    // Ajusta dinamicamente a espessura da barra
+                maxBarThickness: 50, // Limita a espessura máxima das barras
                 categoryPercentage: 0.8, // Define a largura do grupo de barras (de 0 a 1)
                 barPercentage: 0.9  // Define a largura de cada barra (de 0 a 1)
             }]
@@ -83,7 +120,7 @@
             plugins: {
                 datalabels: {
                     align: 'end', // Alinhamento do texto
-                    anchor: 'end', // Posição do texto
+                    anchor: 'start', // Posição do texto
                     color: 'black', // Cor do texto
                     font: {
                         weight: 'bold' // Negrito para destaque
@@ -110,9 +147,8 @@
         plugins: [ChartDataLabels]
     });
 
-    // Ajuste dinâmico da altura do canvas baseado no número de barras
-    var canvasHeight = dates.length * 50; // Define 50px de altura por barra
-    document.getElementById('finishedChart').style.height = canvasHeight + 'px';
+    // Ajuste dinâmico da altura do gráfico
+    adjustChartHeight(finishedChart, dates);
 
     function applyDateFilter() {
         var dateFrom = document.getElementById('date_from').value;
@@ -144,6 +180,9 @@
         finishedChart.data.labels = filteredDates;
         finishedChart.data.datasets[0].data = filteredTotals;
         finishedChart.update();
+
+        // Ajustar a altura do gráfico após o filtro
+        adjustChartHeight(finishedChart, filteredDates);
     }
 
     function resetFilters() {
@@ -156,6 +195,9 @@
         finishedChart.data.labels = dates;
         finishedChart.data.datasets[0].data = totals;
         finishedChart.update();
+
+        // Ajustar a altura do gráfico após o reset
+        adjustChartHeight(finishedChart, dates);
     }
 </script>
 {% endblock %}
