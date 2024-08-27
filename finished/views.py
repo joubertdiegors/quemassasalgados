@@ -52,32 +52,25 @@ class FinishedOrderDetailView(DetailView):
         context['total_quantity'] = total_quantity
         return context
 
-from django.db import IntegrityError
-
 class FinishedOrderCreateView(FormView):
     template_name = 'finished_order_create.html'
     form_class = FinishedOrderForm
 
     def form_valid(self, form):
-        try:
-            order = FinishedOrder.objects.create(finished_date=timezone.now())
+        order = FinishedOrder.objects.create(finished_date=timezone.now())
 
-            selected_products = form.cleaned_data['products']
-            for product in selected_products:
-                quantity = form.cleaned_data.get(f'quantity_{product.id}', 0)
-                if quantity > 0:
-                    FinishedProduct.objects.create(
-                        order=order,
-                        product=product,
-                        quantity=quantity,
-                        finished_date=order.finished_date
-                    )
+        selected_products = form.cleaned_data['products']
+        for product in selected_products:
+            quantity = form.cleaned_data.get(f'quantity_{product.id}', 0)
+            if quantity > 0:
+                FinishedProduct.objects.create(
+                    order=order,
+                    product=product,
+                    quantity=quantity,
+                    finished_date=order.finished_date
+                )
 
-            return redirect(reverse('finished_order_detail', kwargs={'pk': order.pk}))
-        except IntegrityError as e:
-            print(f'IntegrityError: {e}')
-            form.add_error(None, 'Erro ao salvar os dados. Verifique se todos os produtos são válidos e tente novamente.')
-            return self.form_invalid(form)
+        return redirect(reverse('finished_order_detail', kwargs={'pk': order.pk}))
 
 def finished_order_update_view(request, pk):
     order = get_object_or_404(FinishedOrder, pk=pk)
