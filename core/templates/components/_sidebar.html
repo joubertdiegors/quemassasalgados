@@ -32,7 +32,16 @@
                     </ul>
                 </li>
                 
-                <!-- Outros links podem ser adicionados aqui -->
+                <!-- Dropdown para Vendas -->
+                <li class="list-group-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="salesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Vendas
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="salesDropdown">
+                        <li><a class="dropdown-item" href="{% url 'sales_order_list' %}">Visualizar Vendas por Dia</a></li>
+                        <li><a class="dropdown-item" href="{% url 'sales_order_create' %}">Adicionar Vendas</a></li>
+                    </ul>
+                </li>
             </ul>
         </div>
     </div>

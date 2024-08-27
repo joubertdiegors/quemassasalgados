@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Adicionar Vendas{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Adicionar Vendas</h1>
+
+    <form method="post" class="card p-4 shadow-sm">
+        {% csrf_token %}
+        <div class="form-group">
+            <label class="h5">Selecione os produtos vendidos:</label>
+            <div id="product-list" class="row">
+                {% for product in form.fields.products.queryset %}
+                <div class="col-md-6 mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="{{ product.id }}" id="product_{{ product.id }}" name="products" onchange="toggleQuantityInput('{{ product.id }}')">
+                        <label class="form-check-label" for="product_{{ product.id }}" style="font-size: 1.5rem;">
+                            {{ product.name }}
+                        </label>
+                    </div>
+                    <div class="form-group mt-2" id="quantity_{{ product.id }}_container" style="display: none;">
+                        <label for="quantity_input_{{ product.id }}">Quantidade:</label>
+                        <input type="tel" class="form-control quantity-input" id="quantity_input_{{ product.id }}" name="quantity_{{ product.id }}" min="0" oninput="updateTotal()">
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Campo para exibir o total -->
+        <div class="form-group mt-4 d-flex justify-content-center">
+            <label class="h5 mr-2">Total:</label>
+            <span id="total_quantity" class="h5">0</span>
+        </div>
+
+        <div class="mt-3 d-flex justify-content-between">
+            <button type="submit" class="btn btn-primary">Salvar</button>
+            <a href="{% url 'sales_order_list' %}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    function toggleQuantityInput(productId) {
+        var checkbox = document.getElementById('product_' + productId);
+        var quantityInputContainer = document.getElementById('quantity_' + productId + '_container');
+        var quantityInput = document.getElementById('quantity_input_' + productId);
+
+        if (checkbox.checked) {
+            quantityInputContainer.style.display = 'block';
+            quantityInput.focus();
+        } else {
+            quantityInputContainer.style.display = 'none';
+            quantityInput.value = "";  // Limpa o valor do input quando o checkbox é desmarcado
+            updateTotal();
+        }
+    }
+
+    function updateTotal() {
+        var total = 0;
+        var quantityInputs = document.getElementsByClassName('quantity-input');
+
+        for (var i = 0; i < quantityInputs.length; i++) {
+            var value = parseInt(quantityInputs[i].value);
+            if (!isNaN(value)) {
+                total += value;
+            }
+        }
+
+        document.getElementById('total_quantity').textContent = total;
+    }
+</script>
+{% endblock %}
