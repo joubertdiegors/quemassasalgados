@@ -26,7 +26,7 @@ class SalesOrderForm(forms.Form):
         for product in selected_products:
             quantity_field = f'quantity_{product.id}'
             quantity = cleaned_data.get(quantity_field)
-            if not quantity:
+            if not quantity:  
                 self.add_error(quantity_field, 'Este campo é obrigatório para o produto selecionado.')
 
         return cleaned_data
@@ -65,7 +65,7 @@ class SalesOrderUpdateForm(forms.ModelForm):
         for product in selected_products:
             quantity_field = f'quantity_{product.id}'
             quantity = cleaned_data.get(quantity_field)
-            if not quantity:
+            if not quantity:  
                 self.add_error(quantity_field, 'Este campo é obrigatório para o produto selecionado.')
 
         return cleaned_data

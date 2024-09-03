@@ -9,6 +9,13 @@
     <!-- Filtros de data e dia da semana -->
     <div class="row mb-4">
         <div class="col-md-3">
+            <label for="month_select">Mês:</label>
+            <select id="month_select" class="form-control" onchange="setDateRangeByMonth()">
+                <option value="">Selecione um mês</option>
+                <!-- As opções serão preenchidas dinamicamente no script -->
+            </select>
+        </div>
+        <div class="col-md-3">
             <label for="date_from">De:</label>
             <input type="date" id="date_from" class="form-control">
         </div>
@@ -53,6 +60,14 @@
                 </label>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="sold" id="showSold" checked>
+                <label class="form-check-label" for="showSold">
+                    Mostrar Produtos Vendidos
+                </label>
+            </div>
+        </div>
     </div>
 
     <div class="row">
@@ -78,35 +93,40 @@
 <!-- Script para inicializar o gráfico e configurar as datas -->
 <script>
     // Defina as variáveis no escopo global
-    var dates, producedTotals, finishedTotals, productionFinishedChart;
+    var dates, producedTotals, finishedTotals, soldTotals, productionFinishedChart;
+    var monthsAvailable = {};
 
     window.onload = function() {
+        // Inicialize as datas e variáveis do gráfico
+        initializeDatesAndChart();
+        populateMonthSelect();
+        selectCurrentMonth();
+        applyDateFilter();
+    }
+
+    function selectCurrentMonth() {
         var today = new Date();
+        var currentMonth = ('0' + (today.getMonth() + 1)).slice(-2) + '/' + today.getFullYear();
+        var monthSelect = document.getElementById('month_select');
 
-        // Define o primeiro dia do mês corrente
-        var firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-
-        // Define o último dia do mês corrente
-        var lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-        function formatDate(date) {
-            var year = date.getFullYear();
-            var month = ('0' + (date.getMonth() + 1)).slice(-2);
-            var day = ('0' + date.getDate()).slice(-2);
-            return year + '-' + month + '-' + day;
+        // Seleciona o mês corrente no dropdown
+        for (var i = 0; i < monthSelect.options.length; i++) {
+            if (monthSelect.options[i].value === currentMonth) {
+                monthSelect.selectedIndex = i;
+                setDateRangeByMonth();  // Aplica o filtro para o mês corrente
+                break;
+            }
         }
+    }
 
-        var formattedFirstDay = formatDate(firstDayOfMonth);
-        var formattedLastDay = formatDate(lastDayOfMonth);
-
-        // Preenche os inputs com as datas formatadas
-        document.getElementById('date_from').value = formattedFirstDay;
-        document.getElementById('date_to').value = formattedLastDay;
+    function initializeDatesAndChart() {
+        var today = new Date();
 
         // Inicializar as variáveis globais com os dados do template
         dates = JSON.parse('{{ dates|escapejs }}');
         producedTotals = JSON.parse('{{ produced_totals|escapejs }}');
         finishedTotals = JSON.parse('{{ finished_totals|escapejs }}');
+        soldTotals = JSON.parse('{{ sold_totals|escapejs }}');
 
         var ctx = document.getElementById('productionFinishedChart').getContext('2d');
         productionFinishedChart = new Chart(ctx, {
@@ -130,6 +150,17 @@
                         data: finishedTotals,
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
                         borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        barThickness: 'flex',
+                        maxBarThickness: 50,
+                        categoryPercentage: 0.8,
+                        barPercentage: 0.9
+                    },
+                    {
+                        label: 'Produtos Vendidos por Dia',
+                        data: soldTotals,
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
                         borderWidth: 1,
                         barThickness: 'flex',
                         maxBarThickness: 50,
@@ -172,9 +203,71 @@
         
         adjustChartHeight(productionFinishedChart, dates);
 
-        // Aplica o filtro automaticamente com as datas selecionadas
-        applyDateFilter();
+        monthsAvailable = getAvailableMonths(dates);
     };
+
+    function getAvailableMonths(dates) {
+        var months = {};
+        dates.forEach(function(date) {
+            var parts = date.split('/');
+            var month = parts[1] + '/' + parts[2]; // "MM/YYYY"
+            if (!months[month]) {
+                months[month] = [];
+            }
+            months[month].push(date);
+        });
+        return months;
+    }
+
+    function populateMonthSelect() {
+        var monthSelect = document.getElementById('month_select');
+        for (var month in monthsAvailable) {
+            var parts = month.split('/');
+            var year = parts[1];
+            var monthIndex = parseInt(parts[0]) - 1;  // Subtraia 1 porque o mês em JavaScript é baseado em zero
+            var monthName = new Date(year, monthIndex).toLocaleString('default', { month: 'long', year: 'numeric' });
+
+            var option = document.createElement('option');
+            option.value = month;
+            option.textContent = monthName;
+            monthSelect.appendChild(option);
+        }
+    }
+
+    function setDateRangeByMonth() {
+        var monthSelect = document.getElementById('month_select');
+        var selectedMonth = monthSelect.value;
+
+        if (selectedMonth) {
+            var parts = selectedMonth.split('/');
+            var month = parseInt(parts[0]) - 1;  // O mês em JavaScript é baseado em zero
+            var year = parseInt(parts[1]);
+
+            // Define o primeiro dia do mês selecionado
+            var firstDayOfMonth = new Date(year, month, 1);
+
+            // Define o último dia do mês selecionado
+            var lastDayOfMonth = new Date(year, month + 1, 0);
+
+            // Formata as datas para o formato yyyy-mm-dd
+            var formattedFirstDay = formatDate(firstDayOfMonth);
+            var formattedLastDay = formatDate(lastDayOfMonth);
+
+            // Preenche os inputs com as datas formatadas
+            document.getElementById('date_from').value = formattedFirstDay;
+            document.getElementById('date_to').value = formattedLastDay;
+        } else {
+            document.getElementById('date_from').value = '';
+            document.getElementById('date_to').value = '';
+        }
+    }
+
+    function formatDate(date) {
+        var year = date.getFullYear();
+        var month = ('0' + (date.getMonth() + 1)).slice(-2);
+        var day = ('0' + date.getDate()).slice(-2);
+        return year + '-' + month + '-' + day;
+    }
 
     function adjustChartHeight(chart, labels) {
         var minBars = 5;
@@ -202,6 +295,7 @@
         var filteredDates = [];
         var filteredProducedTotals = [];
         var filteredFinishedTotals = [];
+        var filteredSoldTotals = [];
 
         for (var i = 0; i < dates.length; i++) {
             var currentDate = new Date(dates[i].split('/').reverse().join('-'));
@@ -214,6 +308,7 @@
                 filteredDates.push(dates[i]);
                 filteredProducedTotals.push(producedTotals[i]);
                 filteredFinishedTotals.push(finishedTotals[i]);
+                filteredSoldTotals.push(soldTotals[i]);
             }
         }
 
@@ -249,6 +344,20 @@
             });
         }
 
+        if (showSold) {
+            productionFinishedChart.data.datasets.push({
+                label: 'Produtos Vendidos por Dia',
+                data: filteredSoldTotals,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1,
+                barThickness: 'flex',
+                maxBarThickness: 50,
+                categoryPercentage: 0.8,
+                barPercentage: 0.9
+            });
+        }
+
         productionFinishedChart.update();
         adjustChartHeight(productionFinishedChart, filteredDates);
     }
@@ -256,6 +365,7 @@
     function resetFilters() {
         document.getElementById('date_from').value = '';
         document.getElementById('date_to').value = '';
+        document.getElementById('month_select').value = '';
         document.getElementById('weekday').value = '';
         document.getElementById('showProduced').checked = true;
         document.getElementById('showFinished').checked = true;
@@ -278,6 +388,17 @@
                 data: finishedTotals,
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
                 borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+                barThickness: 'flex',
+                maxBarThickness: 50,
+                categoryPercentage: 0.8,
+                barPercentage: 0.9
+            },
+            {
+                label: 'Produtos Vendidos por Dia',
+                data: filteredSoldTotals,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
                 borderWidth: 1,
                 barThickness: 'flex',
                 maxBarThickness: 50,
