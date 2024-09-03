@@ -286,6 +286,7 @@
         // Verifica quais checkboxes estão marcados
         var showProduced = document.getElementById('showProduced').checked;
         var showFinished = document.getElementById('showFinished').checked;
+        var showSold = document.getElementById('showSold').checked;
 
         // Convert strings to Date objects
         var startDate = new Date(dateFrom);
@@ -369,6 +370,7 @@
         document.getElementById('weekday').value = '';
         document.getElementById('showProduced').checked = true;
         document.getElementById('showFinished').checked = true;
+        document.getElementById('showSold').checked = true;
 
         productionFinishedChart.data.labels = dates;
         productionFinishedChart.data.datasets = [
@@ -396,7 +398,7 @@
             },
             {
                 label: 'Produtos Vendidos por Dia',
-                data: filteredSoldTotals,
+                data: soldTotals,
                 backgroundColor: 'rgba(255, 99, 132, 0.2)',
                 borderColor: 'rgba(255, 99, 132, 1)',
                 borderWidth: 1,
