@@ -5,7 +5,7 @@
     </div>
     <div class="offcanvas-body">
         <div>
-            <ul class="list-group">
+            <ul class="list-group list-group-flush custom-list-group">
                 <li class="list-group-item"><a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a></li>
                 <li class="list-group-item"><a class="nav-link" href="{% url 'product_list' %}">Produtos</a></li>
                 
@@ -46,3 +46,29 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* Aumenta o tamanho da fonte e espaçamento dos itens da lista */
+    .custom-list-group .list-group-item {
+        font-size: 2rem; /* Tamanho da fonte maior */
+        padding: 20px 20px; /* Mais espaçamento interno */
+    }
+
+    /* Ajusta o espaçamento entre itens do dropdown */
+    .custom-list-group .dropdown-menu .dropdown-item {
+        font-size: 1.5rem; /* Aumenta o tamanho da fonte dos itens do dropdown */
+        padding: 15px 20px; /* Mais espaçamento interno */
+    }
+
+    /* Ajusta a aparência dos links */
+    .custom-list-group .nav-link {
+        color: #000; /* Cor do texto */
+        text-decoration: none; /* Remove o sublinhado */
+    }
+
+    /* Ajusta a aparência dos links ao passar o mouse */
+    .custom-list-group .nav-link:hover {
+        color: #007bff; /* Cor do texto ao passar o mouse */
+    }
+</style>
+
