@@ -16,25 +16,3 @@ class SalesProduct(models.Model):
 
     def __str__(self):
         return f'{self.product.name} - {self.quantity} vendidos em {self.sale_date}'
-    
-    def save(self, *args, **kwargs):
-        if self.pk:
-            old_quantity = SalesProduct.objects.get(pk=self.pk).quantity
-
-            if self.quantity > old_quantity:
-                difference = self.quantity - old_quantity
-                self.product.stock_quantity -= difference
-            elif self.quantity < old_quantity:
-                difference = old_quantity - self.quantity
-                self.product.stock_quantity += difference
-        else:
-            self.product.stock_quantity -= self.quantity
-
-        self.product.save()
-        super(SalesProduct, self).save(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        # Devolver a quantidade ao estoque ao deletar
-        self.product.stock_quantity += self.quantity
-        self.product.save()
-        super(SalesProduct, self).delete(*args, **kwargs)
