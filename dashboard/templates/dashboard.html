@@ -60,7 +60,7 @@
                 </label>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="sold" id="showSold" checked onclick="applyDateFilter()">
                 <label class="form-check-label" for="showSold">
@@ -68,6 +68,18 @@
                 </label>
             </div>
         </div>
+        <div class="col-md-6">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="left_over" id="showLeftOver" checked onclick="applyDateFilter()">
+                <label class="form-check-label" for="showLeftOver">
+                    Mostrar Sobras
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div style="color: rgb(231, 148, 62);">
+
     </div>
 
     <div class="row">
@@ -93,7 +105,7 @@
 <!-- Script para inicializar o gráfico e configurar as datas -->
 <script>
     // Defina as variáveis no escopo global
-    var dates, producedTotals, finishedTotals, soldTotals, productionFinishedChart;
+    var dates, producedTotals, finishedTotals, soldTotals, leftOverTotals, productionFinishedChart;
     var monthsAvailable = {};
 
     window.onload = function() {
@@ -127,6 +139,7 @@
         producedTotals = JSON.parse('{{ produced_totals|escapejs }}');
         finishedTotals = JSON.parse('{{ finished_totals|escapejs }}');
         soldTotals = JSON.parse('{{ sold_totals|escapejs }}');
+        leftOverTotals = JSON.parse('{{ left_over_totals|escapejs }}');
 
         var ctx = document.getElementById('productionFinishedChart').getContext('2d');
         productionFinishedChart = new Chart(ctx, {
@@ -135,10 +148,10 @@
                 labels: dates,
                 datasets: [
                     {
-                        label: 'Produtos Produzidos por Dia',
+                        label: 'Produzidos por Dia',
                         data: producedTotals,
-                        backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                        borderColor: 'rgba(153, 102, 255, 1)',
+                        backgroundColor: 'rgba(26, 47, 209, 0.2)',
+                        borderColor: 'rgba(26, 47, 209, 1)',
                         borderWidth: 1,
                         barThickness: 'flex',
                         maxBarThickness: 50,
@@ -146,10 +159,10 @@
                         barPercentage: 0.9
                     },
                     {
-                        label: 'Produtos Finalizados por Dia',
+                        label: 'Finalizados por Dia',
                         data: finishedTotals,
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(50, 209, 26, 0.2)',
+                        borderColor: 'rgba(50, 209, 26, 1)',
                         borderWidth: 1,
                         barThickness: 'flex',
                         maxBarThickness: 50,
@@ -157,8 +170,19 @@
                         barPercentage: 0.9
                     },
                     {
-                        label: 'Produtos Vendidos por Dia',
+                        label: 'Vendidos por Dia',
                         data: soldTotals,
+                        backgroundColor: 'rgba(231, 148, 62, 0.2)',
+                        borderColor: 'rgba(231, 148, 62, 1)',
+                        borderWidth: 1,
+                        barThickness: 'flex',
+                        maxBarThickness: 50,
+                        categoryPercentage: 0.8,
+                        barPercentage: 0.9
+                    },
+                    {
+                        label: 'Sobras por Dia',
+                        data: leftOverTotals,
                         backgroundColor: 'rgba(255, 99, 132, 0.2)',
                         borderColor: 'rgba(255, 99, 132, 1)',
                         borderWidth: 1,
@@ -271,8 +295,8 @@
     }
 
     function adjustChartHeight(chart, labels) {
-        var minBars = 8;
-        var barHeight = 50;
+        var minBars = 12;
+        var barHeight = 80;
         var minHeight = minBars * barHeight;
         var dynamicHeight = labels.length * barHeight;
         var finalHeight = Math.max(minHeight, dynamicHeight);
@@ -288,6 +312,7 @@
         var showProduced = document.getElementById('showProduced').checked;
         var showFinished = document.getElementById('showFinished').checked;
         var showSold = document.getElementById('showSold').checked;
+        var showLeftOver = document.getElementById('showLeftOver').checked;
 
         // Convert strings to Date objects
         var startDate = new Date(dateFrom);
@@ -298,6 +323,7 @@
         var filteredProducedTotals = [];
         var filteredFinishedTotals = [];
         var filteredSoldTotals = [];
+        var filteredLeftOverTotals = [];
 
         for (var i = 0; i < dates.length; i++) {
             var currentDate = new Date(dates[i].split('/').reverse().join('-'));
@@ -311,6 +337,7 @@
                 filteredProducedTotals.push(producedTotals[i]);
                 filteredFinishedTotals.push(finishedTotals[i]);
                 filteredSoldTotals.push(soldTotals[i]);
+                filteredLeftOverTotals.push(leftOverTotals[i]);
             }
         }
 
@@ -320,10 +347,10 @@
 
         if (showProduced) {
             productionFinishedChart.data.datasets.push({
-                label: 'Produtos Produzidos por Dia',
+                label: 'Produzidos por Dia',
                 data: filteredProducedTotals,
-                backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                borderColor: 'rgba(153, 102, 255, 1)',
+                backgroundColor: 'rgba(26, 47, 209, 0.2)',
+                borderColor: 'rgba(26, 47, 209, 1)',
                 borderWidth: 1,
                 barThickness: 'flex',
                 maxBarThickness: 50,
@@ -334,10 +361,10 @@
 
         if (showFinished) {
             productionFinishedChart.data.datasets.push({
-                label: 'Produtos Finalizados por Dia',
+                label: 'Finalizados por Dia',
                 data: filteredFinishedTotals,
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(50, 209, 26, 0.2)',
+                borderColor: 'rgba(50, 209, 26, 1)',
                 borderWidth: 1,
                 barThickness: 'flex',
                 maxBarThickness: 50,
@@ -348,8 +375,22 @@
 
         if (showSold) {
             productionFinishedChart.data.datasets.push({
-                label: 'Produtos Vendidos por Dia',
+                label: 'Vendidos por Dia',
                 data: filteredSoldTotals,
+                backgroundColor: 'rgba(231, 148, 62, 0.2)',
+                borderColor: 'rgba(231, 148, 62, 1)',
+                borderWidth: 1,
+                barThickness: 'flex',
+                maxBarThickness: 50,
+                categoryPercentage: 0.8,
+                barPercentage: 0.9
+            });
+        }
+
+        if (showLeftOver) {
+            productionFinishedChart.data.datasets.push({
+                label: 'Sobras por Dia',
+                data: filteredLeftOverTotals,
                 backgroundColor: 'rgba(255, 99, 132, 0.2)',
                 borderColor: 'rgba(255, 99, 132, 1)',
                 borderWidth: 1,
@@ -374,6 +415,7 @@
         document.getElementById('showProduced').checked = true;
         document.getElementById('showFinished').checked = true;
         document.getElementById('showSold').checked = true;
+        document.getElementById('showLeftOver').checked = true;
 
         // Chamar a função selectCurrentMonth para selecionar o mês corrente e aplicar o filtro
         selectCurrentMonth();

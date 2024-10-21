@@ -5,12 +5,12 @@
 {% block content %}
 <div class="container mt-5">
     <h1 class="text-center mb-4">Cadastrar Produção</h1>
-    <p>Aqui você deve informar a quantidade de salgados que fabricou no dia.</p>
+    <p>Aqui você deve informar a quantidade de salgados que FABRICOU no dia.</p>
 
     <form method="post" class="card p-4 shadow-sm">
         {% csrf_token %}
         <div class="form-group">
-            <label class="h5">Selecione os produtos para informar a produção:</label>
+            <label class="h5">Selecione os produtos para informar a <b style="background-color: yellow;">produção do dia</b>:</label>
             <div id="product-list" class="row">
                 {% for product in form.fields.products.queryset %}
                 <div class="col-md-6 mb-3">

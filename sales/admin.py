@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import SalesOrder, SalesProduct
+from .models import SalesOrder, SalesProduct, LeftoverOrder, LeftoverProduct
 
 class SalesProductInline(admin.TabularInline):
     model = SalesProduct
@@ -14,3 +14,18 @@ class SalesOrderAdmin(admin.ModelAdmin):
 
 admin.site.register(SalesOrder, SalesOrderAdmin)
 admin.site.register(SalesProduct)
+
+
+class LeftoverProductInline(admin.TabularInline):
+    model = LeftoverProduct
+    extra = 1
+    fields = ['product', 'quantity', 'leftover_date']
+    search_fields = ['product__name']
+
+class LeftoverOrderAdmin(admin.ModelAdmin):
+    inlines = [LeftoverProductInline]
+    list_display = ['leftover_date']
+    search_fields = ['leftover_date']
+
+admin.site.register(LeftoverOrder, LeftoverOrderAdmin)
+admin.site.register(LeftoverProduct)

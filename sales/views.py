@@ -3,8 +3,8 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages
 from django.urls import reverse, reverse_lazy
 from products.models import Product
-from .models import SalesOrder, SalesProduct
-from .forms import SalesOrderForm, SalesOrderUpdateForm
+from .models import SalesOrder, SalesProduct, LeftoverOrder, LeftoverProduct
+from .forms import SalesOrderForm, SalesOrderUpdateForm, LeftoverOrderForm
 from django.utils import timezone
 from datetime import datetime
 from django.utils.timezone import make_aware
@@ -244,3 +244,142 @@ class SalesOrderDeleteView(DeleteView):
 
         # Redirecionar após a exclusão
         return HttpResponseRedirect(self.success_url)
+
+
+class LeftoverOrderListView(ListView):
+    model = LeftoverOrder
+    template_name = 'leftover_order_list.html'
+    context_object_name = 'orders_with_totals'
+
+    def get_queryset(self):
+        orders = LeftoverOrder.objects.all()
+        orders_with_totals = []
+        for order in orders:
+            total_quantity = sum([product.quantity for product in order.leftover_products.all()])
+            orders_with_totals.append({
+                'order': order,
+                'total_quantity': total_quantity
+            })
+        return orders_with_totals
+
+class LeftoverOrderDetailView(DetailView):
+    model = LeftoverOrder
+    template_name = 'leftover_order_detail.html'
+    context_object_name = 'leftover_order'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        leftover_products = self.object.leftover_products.all()
+
+        leftover_data = []
+        total_quantity = 0
+
+        for product in leftover_products:
+            leftover_data.append({
+                'product': product.product.name,
+                'quantity': product.quantity,
+                'date': product.leftover_date
+            })
+            total_quantity += product.quantity
+
+        context['leftover_data'] = leftover_data
+        context['total_quantity'] = total_quantity
+        return context
+
+class LeftoverOrderCreateView(FormView):
+    template_name = 'leftover_order_create.html'
+    form_class = LeftoverOrderForm
+
+    def form_valid(self, form):
+        order = LeftoverOrder.objects.create(leftover_date=timezone.now())
+
+        selected_products = form.cleaned_data['products']
+        for product in selected_products:
+            quantity = form.cleaned_data.get(f'quantity_{product.id}', 0)
+            no_restock = self.request.POST.get(f'no_restock_{product.id}', False)
+
+            if quantity > 0:
+                # Se no_restock estiver marcado, restock será False, ou seja, não restoca.
+                LeftoverProduct.objects.create(
+                    order=order,
+                    product=product,
+                    quantity=quantity,
+                    leftover_date=order.leftover_date,
+                    restock=not bool(no_restock)  # Inverte a lógica: checkbox selecionado significa não restocar
+                )
+
+        return redirect(reverse('leftover_order_detail', kwargs={'pk': order.pk}))
+
+def leftover_order_update_view(request, pk):
+    order = get_object_or_404(LeftoverOrder, pk=pk)
+    products = Product.objects.all()
+    leftover_products = order.leftover_products.all()
+
+    if request.method == 'POST':
+        selected_products = request.POST.getlist('products')
+        quantities = {}
+        no_restock_flags = {}
+
+        for k, v in request.POST.items():
+            if k.startswith('quantity_'):
+                try:
+                    product_id = int(k.split('_')[1])
+                    quantity = int(v) if v.isdigit() else 0
+                    quantities[product_id] = quantity
+                except ValueError:
+                    continue
+
+            if k.startswith('no_restock_'):
+                try:
+                    product_id = int(k.split('_')[1])
+                    no_restock_flags[product_id] = True if v == 'on' else False
+                except ValueError:
+                    continue
+
+        for product_id in selected_products:
+            quantity = quantities.get(int(product_id), 0)
+            no_restock = no_restock_flags.get(int(product_id), False)
+
+            leftover_product = LeftoverProduct.objects.filter(order=order, product_id=product_id).first()
+
+            if leftover_product:
+                leftover_product.quantity = quantity
+                leftover_product.restock = not no_restock  # Atualiza o campo de restock
+                leftover_product.save()
+            else:
+                LeftoverProduct.objects.create(
+                    order=order,
+                    product_id=product_id,
+                    quantity=quantity,
+                    leftover_date=order.leftover_date,
+                    restock=not no_restock  # Define o campo de restock na criação
+                )
+
+        return redirect('leftover_order_detail', pk=order.pk)
+
+    product_quantities = {prod.product.id: prod.quantity for prod in leftover_products}
+    product_restocks = {prod.product.id: not prod.restock for prod in leftover_products}  # Agora com booleanos corretos
+
+    context = {
+        'order': order,
+        'products': products,
+        'product_quantities': product_quantities,
+        'product_restocks': product_restocks,  # Passando o valor correto para o template
+    }
+
+    return render(request, 'leftover_order_update.html', context)
+
+class LeftoverOrderDeleteView(DeleteView):
+    model = LeftoverOrder
+    template_name = 'leftover_order_confirm_delete.html'
+    success_url = reverse_lazy('leftover_order_list')
+
+    def form_valid(self, form):
+        leftover_order = self.get_object()
+
+        for leftover_product in leftover_order.leftover_products.all():
+            leftover_product.delete()
+
+        leftover_order.delete()
+
+        return redirect(self.success_url)

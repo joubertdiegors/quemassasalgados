@@ -1,6 +1,6 @@
 from django import forms
 from products.models import Product
-from .models import SalesOrder, SalesProduct
+from .models import SalesOrder, SalesProduct, LeftoverOrder
 
 class SalesOrderForm(forms.Form):
     products = forms.ModelMultipleChoiceField(
@@ -57,6 +57,36 @@ class SalesOrderUpdateForm(forms.ModelForm):
                     required=False,
                     label=f'Quantidade para {product.name}'
                 )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        selected_products = cleaned_data.get('products', [])
+        
+        for product in selected_products:
+            quantity_field = f'quantity_{product.id}'
+            quantity = cleaned_data.get(quantity_field)
+            if not quantity:  
+                self.add_error(quantity_field, 'Este campo é obrigatório para o produto selecionado.')
+
+        return cleaned_data
+
+
+class LeftoverOrderForm(forms.Form):
+    products = forms.ModelMultipleChoiceField(
+        queryset=Product.objects.all().order_by('name'),
+        widget=forms.CheckboxSelectMultiple,
+        label="Produtos"
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for product in self.fields['products'].queryset:
+            self.fields[f'quantity_{product.id}'] = forms.IntegerField(
+                min_value=1,
+                initial=1,
+                required=False,
+                label=f'Quantidade para {product.name}'
+            )
 
     def clean(self):
         cleaned_data = super().clean()
