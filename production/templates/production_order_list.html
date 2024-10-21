@@ -24,7 +24,9 @@
         <tbody>
             {% for item in orders_with_totals %}
             <tr>
-                <td class="text-center" style="font-size: 20px;">{{ item.order.order_date|date:"d/m/Y" }}</td>
+                <td class="text-center" style="font-size: 20px;" data-order="{{ item.order.order_date|date:'Y-m-d' }}">
+                    {{ item.order.order_date|date:"d/m/Y" }}
+                </td>
                 <td class="text-center" style="font-size: 20px;">{{ item.total_quantity }}</td>
                 <td>
                     <a href="{% url 'production_order_detail' item.order.id %}" class="btn btn-info btn-sm mb-2" title="Ver Detalhes">
