@@ -26,6 +26,13 @@
             </tr>
             {% endfor %}
         </tbody>
+        <tfoot>
+            <tr>
+                <th>Total</th>
+                <th id="totalStockQuantity">0</th>
+                <th></th>
+            </tr>
+        </tfoot>
     </table>
 </div>
 
@@ -53,6 +60,17 @@
                 infoEmpty: "Nenhum registro disponível",
                 info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
                 infoFiltered: "(filtrado de _MAX_ registros no total)"
+            },
+            footerCallback: function(row, data, start, end, display) {
+                var api = this.api();
+
+                // Calcula a soma de "Quantidade em Estoque"
+                var total = api.column(1, { page: 'current' }).data().reduce(function(a, b) {
+                    return parseInt(a) + parseInt(b);
+                }, 0);
+
+                // Atualiza o rodapé com o total
+                $(api.column(1).footer()).html(total);
             }
         });
     });
