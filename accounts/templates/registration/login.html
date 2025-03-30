@@ -1,0 +1,17 @@
+<!-- accounts/templates/registration/login.html -->
+<h2>Login with Access Code</h2>
+
+{% if messages %}
+  <ul>
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+  <label for="code">Access Code:</label>
+  <input type="text" name="code" id="code" required>
+  <button type="submit">Login</button>
+</form>

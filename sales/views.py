@@ -1,6 +1,7 @@
 from django.views.generic import ListView, DetailView, FormView, DeleteView
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.urls import reverse, reverse_lazy
 from products.models import Product
 from .models import SalesOrder, SalesProduct, LeftoverOrder, LeftoverProduct
@@ -11,11 +12,14 @@ from django.utils.timezone import make_aware
 from django.http import HttpResponseRedirect
 import json
 import csv
+from django.contrib.auth.decorators import login_required, permission_required
 
-class SalesOrderListView(ListView):
+class SalesOrderListView(PermissionRequiredMixin, LoginRequiredMixin, ListView):
     model = SalesOrder
     template_name = 'sales_order_list.html'
     context_object_name = 'orders_with_totals'
+    permission_required = 'sales.view_salesorder'
+    raise_exception = True
 
     def get_queryset(self):
         orders = SalesOrder.objects.all()
@@ -28,10 +32,12 @@ class SalesOrderListView(ListView):
             })
         return orders_with_totals
 
-class SalesOrderDetailView(DetailView):
+class SalesOrderDetailView(PermissionRequiredMixin, LoginRequiredMixin, DetailView):
     model = SalesOrder
     template_name = 'sales_order_detail.html'
     context_object_name = 'sales_order'
+    permission_required = 'sales.view_salesorder'
+    raise_exception = True
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -52,9 +58,11 @@ class SalesOrderDetailView(DetailView):
         context['total_quantity'] = total_quantity
         return context
 
-class SalesOrderCreateView(FormView):
+class SalesOrderCreateView(PermissionRequiredMixin, LoginRequiredMixin, FormView):
     template_name = 'sales_order_create.html'
     form_class = SalesOrderForm
+    permission_required = 'sales.add_salesorder'
+    raise_exception = True
 
     def form_valid(self, form):
         order = SalesOrder.objects.create(sale_date=timezone.now())
@@ -72,6 +80,8 @@ class SalesOrderCreateView(FormView):
 
         return redirect(reverse('sales_order_detail', kwargs={'pk': order.pk}))
 
+@permission_required('sales.change_salesorder', raise_exception=True)
+@login_required
 def sales_order_update_view(request, pk):
     order = get_object_or_404(SalesOrder, pk=pk)
     products = Product.objects.all()
@@ -120,6 +130,8 @@ def sales_order_update_view(request, pk):
 
     return render(request, 'sales_order_update.html', context)
 
+@permission_required('sales.add_salesorder', raise_exception=True)
+@login_required
 def sales_order_upload(request):
     if request.method == 'POST':
         print("Formulário submetido via POST.")
@@ -226,10 +238,12 @@ def sales_order_upload(request):
     print("GET request - renderizando o template de upload.")
     return render(request, 'sales_order_upload.html')
 
-class SalesOrderDeleteView(DeleteView):
+class SalesOrderDeleteView(PermissionRequiredMixin, LoginRequiredMixin, DeleteView):
     model = SalesOrder
     template_name = 'sales_order_confirm_delete.html'
     success_url = reverse_lazy('sales_order_list')
+    permission_required = 'sales.delete_salesorder'
+    raise_exception = True
 
     def form_valid(self, form):
         # Obter o SalesOrder que será deletado
@@ -245,11 +259,12 @@ class SalesOrderDeleteView(DeleteView):
         # Redirecionar após a exclusão
         return HttpResponseRedirect(self.success_url)
 
-
-class LeftoverOrderListView(ListView):
+class LeftoverOrderListView(PermissionRequiredMixin, LoginRequiredMixin, ListView):
     model = LeftoverOrder
     template_name = 'leftover_order_list.html'
     context_object_name = 'orders_with_totals'
+    permission_required = 'sales.view_leftoverorder'
+    raise_exception = True
 
     def get_queryset(self):
         orders = LeftoverOrder.objects.all()
@@ -262,10 +277,12 @@ class LeftoverOrderListView(ListView):
             })
         return orders_with_totals
 
-class LeftoverOrderDetailView(DetailView):
+class LeftoverOrderDetailView(PermissionRequiredMixin, LoginRequiredMixin, DetailView):
     model = LeftoverOrder
     template_name = 'leftover_order_detail.html'
     context_object_name = 'leftover_order'
+    permission_required = 'sales.view_leftoverorder'
+    raise_exception = True
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -286,9 +303,11 @@ class LeftoverOrderDetailView(DetailView):
         context['total_quantity'] = total_quantity
         return context
 
-class LeftoverOrderCreateView(FormView):
+class LeftoverOrderCreateView(PermissionRequiredMixin, LoginRequiredMixin, FormView):
     template_name = 'leftover_order_create.html'
     form_class = LeftoverOrderForm
+    permission_required = 'sales.add_leftoverorder'
+    raise_exception = True
 
     def form_valid(self, form):
         order = LeftoverOrder.objects.create(leftover_date=timezone.now())
@@ -310,6 +329,8 @@ class LeftoverOrderCreateView(FormView):
 
         return redirect(reverse('leftover_order_detail', kwargs={'pk': order.pk}))
 
+@permission_required('sales.change_leftoverorder', raise_exception=True)
+@login_required
 def leftover_order_update_view(request, pk):
     order = get_object_or_404(LeftoverOrder, pk=pk)
     products = Product.objects.all()
@@ -369,10 +390,12 @@ def leftover_order_update_view(request, pk):
 
     return render(request, 'leftover_order_update.html', context)
 
-class LeftoverOrderDeleteView(DeleteView):
+class LeftoverOrderDeleteView(PermissionRequiredMixin, LoginRequiredMixin, DeleteView):
     model = LeftoverOrder
     template_name = 'leftover_order_confirm_delete.html'
     success_url = reverse_lazy('leftover_order_list')
+    permission_required = 'sales.delete_leftoverorder'
+    raise_exception = True
 
     def form_valid(self, form):
         leftover_order = self.get_object()

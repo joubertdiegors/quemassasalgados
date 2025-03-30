@@ -44,6 +44,7 @@
 </head>
 <body>
     {% include 'components/_header.html' %}
+    {% include 'components/_messages.html' %}
 
     <div class="container mt-4">
         {% block content %}
@@ -54,7 +55,15 @@
     {% include 'components/_sidebar.html' %}
     
     {% include 'components/_footer.html' %}
-    {% include '././components/_footer.html' %}
     </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          const toastElList = [].slice.call(document.querySelectorAll('.toast'))
+          toastElList.forEach(function (toastEl) {
+            new bootstrap.Toast(toastEl, { delay: 5000 }).show()
+          })
+        })
+      </script>
 </body>
 </html>

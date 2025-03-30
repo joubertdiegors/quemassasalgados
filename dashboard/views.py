@@ -6,6 +6,9 @@ from collections import defaultdict
 from datetime import datetime
 import json
 
+from django.contrib.auth.decorators import login_required
+
+@login_required
 def dashboard_view(request):
     # Coletar os dados brutos do banco de dados para FinishedProduct (Finalizados)
     finished_products = FinishedProduct.objects.all()

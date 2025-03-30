@@ -10,11 +10,15 @@ def custom_404(request, exception):
 handler404 = custom_404
 
 urlpatterns = [
+    path('', include('website.urls')),
+    
     path('admin/', admin.site.urls),
-    path('', include('dashboard.urls')),
 
+    path('', include('dashboard.urls')),
+    path('', include('accounts.urls')),
     path('', include('products.urls')),
     path('', include('production.urls')),
     path('', include('finished.urls')),
     path('', include('sales.urls')),
+
 ]

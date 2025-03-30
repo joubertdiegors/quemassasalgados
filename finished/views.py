@@ -1,6 +1,9 @@
 from django.views.generic import ListView, DetailView, FormView, DeleteView
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.decorators import login_required, permission_required
+from core.mixins import CustomPermissionDeniedMixin
 from django.urls import reverse, reverse_lazy
 from products.models import Product
 from .models import FinishedOrder, FinishedProduct
@@ -12,10 +15,12 @@ from django.http import HttpResponseRedirect
 import json
 import csv
 
-class FinishedOrderListView(ListView):
+class FinishedOrderListView(PermissionRequiredMixin, LoginRequiredMixin, ListView):
     model = FinishedOrder
     template_name = 'finished_order_list.html'
     context_object_name = 'orders_with_totals'
+    permission_required = 'finished.view_finishedorder'
+    raise_exception = True
 
     def get_queryset(self):
         orders = FinishedOrder.objects.all()
@@ -28,10 +33,12 @@ class FinishedOrderListView(ListView):
             })
         return orders_with_totals
 
-class FinishedOrderDetailView(DetailView):
+class FinishedOrderDetailView(PermissionRequiredMixin, LoginRequiredMixin, DetailView):
     model = FinishedOrder
     template_name = 'finished_order_detail.html'
     context_object_name = 'finished_order'
+    permission_required = 'finished.view_finishedorder'
+    raise_exception = True
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -52,9 +59,12 @@ class FinishedOrderDetailView(DetailView):
         context['total_quantity'] = total_quantity
         return context
 
-class FinishedOrderCreateView(FormView):
+class FinishedOrderCreateView(CustomPermissionDeniedMixin, LoginRequiredMixin, PermissionRequiredMixin, FormView):
     template_name = 'finished_order_create.html'
     form_class = FinishedOrderForm
+    permission_required = 'finished.add_finishedorder'
+    raise_exception = True
+    redirect_url = 'dashboard'
 
     def form_valid(self, form):
         order = FinishedOrder.objects.create(finished_date=timezone.now())
@@ -71,7 +81,13 @@ class FinishedOrderCreateView(FormView):
                 )
 
         return redirect(reverse('finished_order_detail', kwargs={'pk': order.pk}))
+    
+    def handle_no_permission(self):
+        messages.warning(self.request, 'Você não tem permissão. Fale com a administração!')
+        return redirect('finished_order_list')
 
+@login_required
+@permission_required('finished.change_finishedorder', raise_exception=True)
 def finished_order_update_view(request, pk):
     order = get_object_or_404(FinishedOrder, pk=pk)
     products = Product.objects.all()
@@ -120,6 +136,8 @@ def finished_order_update_view(request, pk):
 
     return render(request, 'finished_order_update.html', context)
 
+@login_required
+@permission_required('finished.add_finishedorder', raise_exception=True)
 def finished_order_upload(request):
     if request.method == 'POST':
         print("Formulário submetido via POST.")
@@ -226,10 +244,12 @@ def finished_order_upload(request):
     print("GET request - renderizando o template de upload.")
     return render(request, 'finished_order_upload.html')
 
-class FinishedOrderDeleteView(DeleteView):
+class FinishedOrderDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = FinishedOrder
     template_name = 'finished_order_confirm_delete.html'
     success_url = reverse_lazy('finished_order_list')
+    permission_required = 'finished.delete_finishedorder'
+    raise_exception = True
 
     def form_valid(self, form):
         # Obter o FinishedOrder que será deletado

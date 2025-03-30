@@ -1,6 +1,8 @@
 from django.views.generic import ListView, DetailView, FormView, DeleteView
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse, reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.decorators import login_required, permission_required
 from products.models import Product
 from .models import Production, ProductionOrder
 from .forms import ProductionOrderForm, ProductionOrderUpdateForm
@@ -8,10 +10,12 @@ from datetime import date
 import json
 from django.http import HttpResponseRedirect
 
-class ProductionOrderListView(ListView):
+class ProductionOrderListView(PermissionRequiredMixin, LoginRequiredMixin, ListView):
     model = ProductionOrder
     template_name = 'production_order_list.html'
     context_object_name = 'orders_with_totals'
+    permission_required = 'production.view_productionorder'
+    raise_exception = True
 
     def get_queryset(self):
         orders = ProductionOrder.objects.all()
@@ -24,10 +28,12 @@ class ProductionOrderListView(ListView):
             })
         return orders_with_totals
 
-class ProductionOrderDetailView(DetailView):
+class ProductionOrderDetailView(LoginRequiredMixin, DetailView):
     model = ProductionOrder
     template_name = 'production_order_detail.html'
     context_object_name = 'order'
+    permission_required = 'production.view_productionorder'
+    raise_exception = True
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -48,9 +54,11 @@ class ProductionOrderDetailView(DetailView):
         context['total_quantity'] = total_quantity
         return context
 
-class ProductionOrderCreateView(FormView):
+class ProductionOrderCreateView(LoginRequiredMixin, FormView):
     template_name = 'production_order_create.html'
     form_class = ProductionOrderForm
+    permission_required = 'production.add_productionorder'
+    raise_exception = True
 
     def form_valid(self, form):
         order = ProductionOrder.objects.create(order_date=date.today())
@@ -68,6 +76,8 @@ class ProductionOrderCreateView(FormView):
 
         return redirect(reverse('production_order_detail', kwargs={'pk': order.pk}))
 
+@permission_required('production.change_productionorder', raise_exception=True)
+@login_required
 def production_order_update_view(request, pk):
     order = get_object_or_404(ProductionOrder, pk=pk)
     products = Product.objects.all()
@@ -114,10 +124,12 @@ def production_order_update_view(request, pk):
 
     return render(request, 'production_order_update.html', context)
 
-class ProductionOrderDeleteView(DeleteView):
+class ProductionOrderDeleteView(PermissionRequiredMixin, LoginRequiredMixin, DeleteView):
     model = ProductionOrder
     template_name = 'production_order_confirm_delete.html'
     success_url = reverse_lazy('production_order_list')
+    permission_required = 'production.delete_productionorder'
+    raise_exception = True
 
     def form_valid(self, form):
         production_order = self.get_object()

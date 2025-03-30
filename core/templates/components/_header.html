@@ -1,20 +1,34 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-success fixed-top">
-    <div class="container-fluid">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        <!-- Botão do menu lateral -->
         <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
             Menu
         </button>
-        <p class="navbar-brand mx-auto text-center mb-0" style="flex: 1; color: white;">Salgados Que Massa</p>
+
+        <!-- Nome centralizado -->
+        <p class="navbar-brand mx-auto mb-0 text-white">Salgados Que Massa</p>
+
+        <!-- Usuário e logout -->
+        {% if request.user.is_authenticated %}
+        <div class="dropdown">
+            <button class="btn btn-success dropdown-toggle text-white" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                {{ request.user.username }}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li><a class="dropdown-item" href="{% url 'logout' %}">Sair</a></li>
+            </ul>
+        </div>
+        {% endif %}
     </div>
 </nav>
 
 <style>
     body {
-        padding-top: 20px;
+        padding-top: 60px;
     }
 
     .navbar-brand {
-        font-size: 1.5rem; /* Ajusta o tamanho do texto se necessário */
-        text-align: center; /* Centraliza o texto */
-        color: white; /* Define a cor do texto como branco para contraste */
+        font-size: 1.5rem;
+        color: white;
     }
 </style>
