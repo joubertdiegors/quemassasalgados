@@ -29,8 +29,8 @@
         <h1 class="mb-4">Nosso site está em construção 🚧</h1>
         <form method="post">
             {% csrf_token %}
-            <p class="mb-3">Se você tem permissão, digite seu código de acesso abaixo:</p>
-            <input type="text" name="access_code" class="form-control mb-3" placeholder="Digite o código" required>
+            <p class="mb-3">Se você tem permissão, digite seu código de acesso logo abaixo:</p>
+            <input type="password" inputmode="numeric" pattern="[0-9]*" name="access_code" class="form-control mb-3" placeholder="Digite o código" required>
             <button class="btn btn-primary w-100" type="submit">Entrar</button>
         </form>
         {% if messages %}
