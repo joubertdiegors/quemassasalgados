@@ -8,6 +8,14 @@
 
     <form method="post" class="card p-4 shadow-sm">
         {% csrf_token %}
+        
+        <div class="form-group d-flex align-items-center gap-2">
+            <label for="{{ form.sale_date.id_for_label }}" class="me-2 mb-0 h5">Data da Venda:</label>
+            {{ form.sale_date }}
+        </div>
+
+        <br>
+
         <div class="form-group">
             <label class="h5">Selecione os produtos vendidos:</label>
             <div id="product-list" class="row">

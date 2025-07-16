@@ -1,8 +1,15 @@
 from django import forms
+from django.utils.timezone import now
 from products.models import Product
 from .models import SalesOrder, SalesProduct, LeftoverOrder
 
 class SalesOrderForm(forms.Form):
+    sale_date = forms.DateField(
+        label='Data da Venda',
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control form-control-sm w-auto'}),
+        initial=now().date,
+        required=True
+    )
     products = forms.ModelMultipleChoiceField(
         queryset=Product.objects.filter(use_in_production=True).order_by('name'),
         widget=forms.CheckboxSelectMultiple,
@@ -11,6 +18,7 @@ class SalesOrderForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         for product in self.fields['products'].queryset:
             self.fields[f'quantity_{product.id}'] = forms.IntegerField(
                 min_value=1,

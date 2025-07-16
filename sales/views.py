@@ -66,7 +66,9 @@ class SalesOrderCreateView(CustomPermissionDeniedMixin, PermissionRequiredMixin,
     raise_exception = True
 
     def form_valid(self, form):
-        order = SalesOrder.objects.create(sale_date=timezone.now())
+        sale_date = form.cleaned_data.get('sale_date') or timezone.now().date()
+
+        order = SalesOrder.objects.create(sale_date=sale_date)
 
         selected_products = form.cleaned_data['products']
         for product in selected_products:
@@ -76,7 +78,7 @@ class SalesOrderCreateView(CustomPermissionDeniedMixin, PermissionRequiredMixin,
                     order=order,
                     product=product,
                     quantity=quantity,
-                    sale_date=order.sale_date
+                    sale_date=sale_date
                 )
 
         return redirect(reverse('sales_order_detail', kwargs={'pk': order.pk}))
