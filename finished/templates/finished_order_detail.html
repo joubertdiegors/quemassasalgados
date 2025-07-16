@@ -27,10 +27,12 @@
 </div>
 
 <script>
+    const userName = "{{ request.user.get_full_name|default:request.user.username }}";
+
     function copyToClipboard() {
         var text = 'Salgados Que Massa - Fritos\n';
         // Usa a data do FinishedOrder
-        text += '{{ finished_order.finished_date|date:"d/m/Y" }}\n\n';
+        text += '{{ finished_order.finished_date|date:"d/m/Y" }} - _' + userName + '_\n\n';
 
         var listItems = document.querySelectorAll('#finished-summary-list li');
         listItems.forEach(function(item) {

@@ -29,7 +29,7 @@ class MaintenanceModeMiddleware:
 
         # Usuário do grupo Atendimento/Cozinha → redireciona sempre ao dashboard
         if user.is_authenticated and user.groups.filter(name__in=['Atendimento', 'Cozinha']).exists():
-            if path != reverse('dashboard'):
+            if path == '/':
                 return redirect('dashboard')
             return self.get_response(request)
 
