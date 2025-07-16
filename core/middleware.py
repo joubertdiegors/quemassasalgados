@@ -28,7 +28,7 @@ class MaintenanceModeMiddleware:
             return self.get_response(request)
 
         # Usuário do grupo Atendimento/Cozinha → redireciona sempre ao dashboard
-        if user.is_authenticated and user.groups.filter(name__in=['Atendimento', 'Cozinha']).exists():
+        if user.is_authenticated and user.groups.filter(name__in=['ADM', 'ALL', 'Atendimento', 'Cozinha']).exists():
             if path == '/':
                 return redirect('dashboard')
             return self.get_response(request)
