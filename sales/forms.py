@@ -4,7 +4,7 @@ from .models import SalesOrder, SalesProduct, LeftoverOrder
 
 class SalesOrderForm(forms.Form):
     products = forms.ModelMultipleChoiceField(
-        queryset=Product.objects.all().order_by('name'),
+        queryset=Product.objects.filter(use_in_production=True).order_by('name'),
         widget=forms.CheckboxSelectMultiple,
         label="Produtos"
     )
@@ -33,7 +33,7 @@ class SalesOrderForm(forms.Form):
 
 class SalesOrderUpdateForm(forms.ModelForm):
     products = forms.ModelMultipleChoiceField(
-        queryset=Product.objects.all().order_by('name'),
+        queryset=Product.objects.filter(use_in_production=True).order_by('name'),
         widget=forms.CheckboxSelectMultiple,
         label="Produtos"
     )
@@ -73,7 +73,7 @@ class SalesOrderUpdateForm(forms.ModelForm):
 
 class LeftoverOrderForm(forms.Form):
     products = forms.ModelMultipleChoiceField(
-        queryset=Product.objects.all().order_by('name'),
+        queryset=Product.objects.filter(use_in_production=True).order_by('name'),
         widget=forms.CheckboxSelectMultiple,
         label="Produtos"
     )

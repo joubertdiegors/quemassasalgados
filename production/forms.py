@@ -4,7 +4,7 @@ from .models import ProductionOrder, Production
 
 class ProductionOrderForm(forms.Form):
     products = forms.ModelMultipleChoiceField(
-        queryset=Product.objects.all().order_by('name'),
+        queryset=Product.objects.filter(use_in_production=True).order_by('name'),
         widget=forms.CheckboxSelectMultiple,
         label="Produtos"
     )
@@ -33,7 +33,7 @@ class ProductionOrderForm(forms.Form):
 
 class ProductionOrderUpdateForm(forms.ModelForm):
     products = forms.ModelMultipleChoiceField(
-        queryset=Product.objects.all().order_by('name'),
+        queryset=Product.objects.filter(use_in_production=True).order_by('name'),
         widget=forms.CheckboxSelectMultiple,
         label="Produtos"
     )

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Criar novo Kit{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">{{ form.instance.pk|yesno:"Editar Kit,Novo Kit" }}</h2>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <hr>
+    <h4 class="mt-4">Opções do Kit</h4>
+    {{ option_formset.management_form }}
+    {% for form in option_formset %}
+      <div class="border rounded p-3 mb-3">
+        {{ form.as_p }}
+      </div>
+    {% endfor %}
+
+    <button type="submit" class="btn btn-success">Salvar</button>
+    <a href="{% url 'kit_list' %}" class="btn btn-secondary">Cancelar</a>
+  </form>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+  {{ block.super }}
+  <script src="https://cdn.ckeditor.com/ckeditor5/38.1.0/classic/ckeditor.js"></script>
+  <script>
+    ClassicEditor
+      .create(document.querySelector('#id_description'))
+      .catch(error => {
+        console.error(error);
+      });
+  </script>
+{% endblock %}

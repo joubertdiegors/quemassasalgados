@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+    <h2>Categorias</h2>
+    <a href="{% url 'category_create' %}" class="btn btn-success mb-3">Nova Categoria</a>
+    <ul class="list-group">
+        {% for cat in categories %}
+            {% if not cat.parent %}
+                <li class="list-group-item">
+                    <strong>{{ cat.name }}</strong>
+                    <a href="{% url 'category_edit' cat.pk %}" class="btn btn-sm btn-outline-secondary float-end">Editar</a>
+                    <a href="{% url 'category_delete' cat.pk %}" class="btn btn-sm btn-outline-danger">Excluir</a>
+        
+                    <ul class="mt-2 ms-3">
+                        {% for sub in categories %}
+                            {% if sub.parent == cat %}
+                                <li>
+                                    {{ sub.name }}
+                                    <a href="{% url 'category_edit' sub.pk %}" class="btn btn-sm btn-outline-secondary ms-2">Editar</a>
+                                    <a href="{% url 'category_delete' cat.pk %}" class="btn btn-sm btn-outline-danger">Excluir</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

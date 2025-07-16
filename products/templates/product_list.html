@@ -11,7 +11,8 @@
         <thead>
             <tr>
                 <th>Nome</th>
-                <th>Quantidade em Estoque</th>
+                <th>Estoque</th>
+                <th>Categoria</th>
                 <th>Ações</th>
             </tr>
         </thead>
@@ -20,6 +21,7 @@
             <tr>
                 <td>{{ product.name }}</td>
                 <td>{{ product.stock_quantity }}</td>
+                <td>{{ product.category.get_full_path }}</td>
                 <td>
                     <a href="{% url 'product_edit' product.id %}" class="btn btn-warning">Editar</a>
                 </td>

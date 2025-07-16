@@ -1,3 +1,5 @@
+{% load group_tags %}
+{% if user|in_group:"Atendimento,Cozinha" %}
 <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
     <div class="offcanvas-header">
         <h5 class="offcanvas-title" id="offcanvasExampleLabel">Menu</h5>
@@ -6,48 +8,103 @@
     <div class="offcanvas-body">
         <div>
             <ul class="list-group list-group-flush custom-list-group">
+
+                {% if request.user.is_staff or request.user.is_superuser %}
                 <li class="list-group-item"><a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a></li>
-                <li class="list-group-item"><a class="nav-link" href="{% url 'product_list' %}">Produtos</a></li>
+                {% endif %}
                 
+                <!-- Dropdown para Produtos -->
+                {% if perms.products.view_product or perms.products.view_productcategory %}
+                <li class="list-group-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="productsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Produtos
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="productsDropdown">
+                        {% if perms.products.view_productcategory %}
+                        <li><a class="dropdown-item" href="{% url 'category_list' %}">Categorias</a></li>
+                        {% endif %}
+                        {% if perms.products.view_product %}
+                        <li><a class="dropdown-item" href="{% url 'product_list' %}">Produtos</a></li>
+                        {% endif %}
+                        {% if perms.products.view_kit %}
+                        <li><a class="dropdown-item" href="{% url 'kit_list' %}">Visualizar Kits</a></li>
+                        {% endif %}
+                    </ul>
+                </li>
+                {% endif %}
+
                 <!-- Dropdown para Produção -->
+                {% if perms.production.view_productionorder or perms.production.add_productionorder %}
                 <li class="list-group-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="productionDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Produção
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="productionDropdown">
+                        {% if perms.production.view_productionorder %}
                         <li><a class="dropdown-item" href="{% url 'production_order_list' %}">Visualizar Produções Diárias</a></li>
+                        {% endif %}
+                        {% if perms.production.add_productionorder %}
                         <li><a class="dropdown-item" href="{% url 'production_order_create' %}">Criar Nova Produção</a></li>
+                        {% endif %}
                     </ul>
                 </li>
+                {% endif %}
                 
                 <!-- Dropdown para Finalizados -->
+                {% if perms.finished.view_finishedorder or perms.finished.add_finishedorder %}
                 <li class="list-group-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="finishedDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Fritos/Assados
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="finishedDropdown">
+                        {% if perms.finished.view_finishedorder %}
                         <li><a class="dropdown-item" href="{% url 'finished_order_list' %}">Visualizar Fritos/Assados por Dia</a></li>
+                        {% endif %}
+                        {% if perms.finished.add_finishedorder %}
                         <li><a class="dropdown-item" href="{% url 'finished_order_create' %}">Adicionar Novos Fritos/Assados</a></li>
                         <li><a class="dropdown-item" href="{% url 'finished_order_upload' %}">Upload de Produtos Finalizados</a></li>
+                        {% endif %}
                     </ul>
                 </li>
+                {% endif %}
                 
                 <!-- Dropdown para Vendas -->
+                {% if perms.sales.view_salesorder or perms.sales.add_salesorder or perms.sales.view_leftoverorder %}
                 <li class="list-group-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="salesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Vendas
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="salesDropdown">
+                        {% if perms.sales.view_salesorder %}
                         <li><a class="dropdown-item" href="{% url 'sales_order_list' %}">Visualizar Vendas por Dia</a></li>
+                        {% endif %}
+                        {% if perms.sales.add_salesorder %}
                         <li><a class="dropdown-item" href="{% url 'sales_order_create' %}">Adicionar Vendas</a></li>
+                        {% endif %}
+                        {% if perms.sales.view_leftoverorder %}
                         <li><a class="dropdown-item" href="{% url 'leftover_order_list' %}">Sobras do dia</a></li>
+                        {% endif %}
+                        {% if perms.sales.add_leftoverorder %}
                         <li><a class="dropdown-item" href="{% url 'leftover_order_create' %}">Adicionar Sobras</a></li>
+                        {% endif %}
                     </ul>
                 </li>
+                {% endif %}
             </ul>
+            {% if request.user.is_authenticated and request.user.is_superuser %}
+                <form method="post" action="{% url 'toggle_maintenance' %}">
+                    {% csrf_token %}
+                    <label>
+                        <input type="checkbox" name="maintenance_mode" onchange="this.form.submit()"
+                            {% if site_config.maintenance_mode %}checked{% endif %}>
+                        Site em manutenção
+                    </label>
+                </form>
+            {% endif %}
         </div>
     </div>
 </div>
+{% endif %}
 
 <style>
     /* Aumenta o tamanho da fonte e espaçamento dos itens da lista */

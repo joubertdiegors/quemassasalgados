@@ -3,9 +3,15 @@
 {% block title %}Cadastrar Produto{% endblock %}
 
 {% block content %}
-<h1>Cadastrar Produto</h1>
-<form method="post">
+<h1>{% if edit %}Editar{% else %}Cadastrar{% endif %} Produto</h1>
+<form method="post" enctype="multipart/form-data">
     {% csrf_token %}
+
+    {% if form.instance.pk and form.instance.image %}
+        <p>Imagem atual:</p>
+        <img src="{{ form.instance.image.url }}" width="150" style="border: 1px solid #ccc; padding: 4px;">
+    {% endif %}
+    
     {{ form.as_p }}
     <button type="submit" class="btn btn-primary">Cadastrar</button>
     <a href="{% url 'product_list' %}" class="btn btn-secondary">Cancelar</a>

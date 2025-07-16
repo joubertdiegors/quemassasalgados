@@ -2,6 +2,7 @@ from django.views.generic import ListView, DetailView, FormView, DeleteView
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from core.mixins import CustomPermissionDeniedMixin
 from django.urls import reverse, reverse_lazy
 from products.models import Product
 from .models import SalesOrder, SalesProduct, LeftoverOrder, LeftoverProduct
@@ -14,7 +15,7 @@ import json
 import csv
 from django.contrib.auth.decorators import login_required, permission_required
 
-class SalesOrderListView(PermissionRequiredMixin, LoginRequiredMixin, ListView):
+class SalesOrderListView(CustomPermissionDeniedMixin, PermissionRequiredMixin, LoginRequiredMixin, ListView):
     model = SalesOrder
     template_name = 'sales_order_list.html'
     context_object_name = 'orders_with_totals'
@@ -32,7 +33,7 @@ class SalesOrderListView(PermissionRequiredMixin, LoginRequiredMixin, ListView):
             })
         return orders_with_totals
 
-class SalesOrderDetailView(PermissionRequiredMixin, LoginRequiredMixin, DetailView):
+class SalesOrderDetailView(CustomPermissionDeniedMixin, PermissionRequiredMixin, LoginRequiredMixin, DetailView):
     model = SalesOrder
     template_name = 'sales_order_detail.html'
     context_object_name = 'sales_order'
@@ -58,7 +59,7 @@ class SalesOrderDetailView(PermissionRequiredMixin, LoginRequiredMixin, DetailVi
         context['total_quantity'] = total_quantity
         return context
 
-class SalesOrderCreateView(PermissionRequiredMixin, LoginRequiredMixin, FormView):
+class SalesOrderCreateView(CustomPermissionDeniedMixin, PermissionRequiredMixin, LoginRequiredMixin, FormView):
     template_name = 'sales_order_create.html'
     form_class = SalesOrderForm
     permission_required = 'sales.add_salesorder'
@@ -238,7 +239,7 @@ def sales_order_upload(request):
     print("GET request - renderizando o template de upload.")
     return render(request, 'sales_order_upload.html')
 
-class SalesOrderDeleteView(PermissionRequiredMixin, LoginRequiredMixin, DeleteView):
+class SalesOrderDeleteView(CustomPermissionDeniedMixin, PermissionRequiredMixin, LoginRequiredMixin, DeleteView):
     model = SalesOrder
     template_name = 'sales_order_confirm_delete.html'
     success_url = reverse_lazy('sales_order_list')
@@ -259,7 +260,7 @@ class SalesOrderDeleteView(PermissionRequiredMixin, LoginRequiredMixin, DeleteVi
         # Redirecionar após a exclusão
         return HttpResponseRedirect(self.success_url)
 
-class LeftoverOrderListView(PermissionRequiredMixin, LoginRequiredMixin, ListView):
+class LeftoverOrderListView(CustomPermissionDeniedMixin, PermissionRequiredMixin, LoginRequiredMixin, ListView):
     model = LeftoverOrder
     template_name = 'leftover_order_list.html'
     context_object_name = 'orders_with_totals'
@@ -277,7 +278,7 @@ class LeftoverOrderListView(PermissionRequiredMixin, LoginRequiredMixin, ListVie
             })
         return orders_with_totals
 
-class LeftoverOrderDetailView(PermissionRequiredMixin, LoginRequiredMixin, DetailView):
+class LeftoverOrderDetailView(CustomPermissionDeniedMixin, PermissionRequiredMixin, LoginRequiredMixin, DetailView):
     model = LeftoverOrder
     template_name = 'leftover_order_detail.html'
     context_object_name = 'leftover_order'
@@ -303,7 +304,7 @@ class LeftoverOrderDetailView(PermissionRequiredMixin, LoginRequiredMixin, Detai
         context['total_quantity'] = total_quantity
         return context
 
-class LeftoverOrderCreateView(PermissionRequiredMixin, LoginRequiredMixin, FormView):
+class LeftoverOrderCreateView(CustomPermissionDeniedMixin, PermissionRequiredMixin, LoginRequiredMixin, FormView):
     template_name = 'leftover_order_create.html'
     form_class = LeftoverOrderForm
     permission_required = 'sales.add_leftoverorder'
@@ -390,7 +391,7 @@ def leftover_order_update_view(request, pk):
 
     return render(request, 'leftover_order_update.html', context)
 
-class LeftoverOrderDeleteView(PermissionRequiredMixin, LoginRequiredMixin, DeleteView):
+class LeftoverOrderDeleteView(CustomPermissionDeniedMixin, PermissionRequiredMixin, LoginRequiredMixin, DeleteView):
     model = LeftoverOrder
     template_name = 'leftover_order_confirm_delete.html'
     success_url = reverse_lazy('leftover_order_list')

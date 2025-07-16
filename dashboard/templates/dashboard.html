@@ -89,6 +89,36 @@
             </div>
         </div>
     </div>
+    
+    <!-- <div class="row">
+        <div class="row mt-5">
+            <div class="col-md-12 chart-container">
+                <canvas id="chartPorProdutoData" height="100"></canvas>
+            </div>
+        </div>
+    </div> -->
+
+    <div class="row">
+        <div class="row mt-5">
+            <div class="col-md-12">
+                <h4 class="mb-3">Resumo Numérico por Produto</h4>
+                <table class="table table-bordered table-striped table-sm">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Produto</th>
+                            <th>Produzidos</th>
+                            <th>Finalizados</th>
+                            <th>Vendidos</th>
+                            <th>Sobras</th>
+                        </tr>
+                    </thead>
+                    <tbody id="product-summary-table-body">
+                        <!-- preenchido via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -229,6 +259,189 @@
 
         monthsAvailable = getAvailableMonths(dates);
     };
+
+    const productDates = JSON.parse('{{ product_dates|escapejs }}');
+    const productList = JSON.parse('{{ product_list|escapejs }}');
+    const producedByProduct = JSON.parse('{{ produced_by_product|escapejs }}');
+    const finishedByProduct = JSON.parse('{{ finished_by_product|escapejs }}');
+    const soldByProduct = JSON.parse('{{ sold_by_product|escapejs }}');
+    const leftOverByProduct = JSON.parse('{{ left_over_by_product|escapejs }}');
+    let chartPorProdutoInstance = null;
+
+    function updateChartPorProduto() {
+        const check = id => document.getElementById(id).checked;
+        const showProduced = check('showProduced');
+        const showFinished = check('showFinished');
+        const showSold = check('showSold');
+        const showLeftOver = check('showLeftOver');
+
+        const start = new Date(document.getElementById("date_from").value);
+        const end = new Date(document.getElementById("date_to").value);
+        const weekday = document.getElementById("weekday").value;
+
+        // inicializa contador por produto
+        const totals = {};
+        for (const produto of productList) {
+            totals[produto] = { Produzidos: 0, Finalizados: 0, Vendidos: 0, Sobras: 0 };
+        }
+
+        // soma por produto conforme filtros de data/dia
+        productDates.forEach((dateStr, i) => {
+            const date = new Date(dateStr.split('/').reverse().join('-'));
+            const wd = date.getDay();
+
+            if ((!isNaN(start) && date < start) || (!isNaN(end) && date > end) || (weekday !== "" && wd != weekday)) {
+                return;
+            }
+
+            for (const produto of productList) {
+                totals[produto]["Produzidos"] += producedByProduct[produto][i] || 0;
+                totals[produto]["Finalizados"] += finishedByProduct[produto][i] || 0;
+                totals[produto]["Vendidos"] += soldByProduct[produto][i] || 0;
+                totals[produto]["Sobras"] += leftOverByProduct[produto][i] || 0;
+            }
+        });
+
+        const labels = productList;
+        const cores = {
+            "Produzidos": "rgba(54, 162, 235, 0.7)",
+            "Finalizados": "rgba(255, 206, 86, 0.7)",
+            "Vendidos": "rgba(75, 192, 192, 0.7)",
+            "Sobras": "rgba(255, 99, 132, 0.7)"
+        };
+
+        const datasets = [];
+        if (showProduced) {
+            datasets.push({
+                label: "Produzidos",
+                data: labels.map(prod => totals[prod]["Produzidos"]),
+                backgroundColor: cores["Produzidos"]
+            });
+        }
+        if (showFinished) {
+            datasets.push({
+                label: "Finalizados",
+                data: labels.map(prod => totals[prod]["Finalizados"]),
+                backgroundColor: cores["Finalizados"]
+            });
+        }
+        if (showSold) {
+            datasets.push({
+                label: "Vendidos",
+                data: labels.map(prod => totals[prod]["Vendidos"]),
+                backgroundColor: cores["Vendidos"]
+            });
+        }
+        if (showLeftOver) {
+            datasets.push({
+                label: "Sobras",
+                data: labels.map(prod => totals[prod]["Sobras"]),
+                backgroundColor: cores["Sobras"]
+            });
+        }
+
+        const ctx = document.getElementById("chartPorProdutoData").getContext("2d");
+        if (chartPorProdutoInstance) chartPorProdutoInstance.destroy();
+        chartPorProdutoInstance = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: {
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'right',
+                        color: 'black',
+                        font: { weight: 'bold' },
+                        formatter: Math.round
+                    },
+                    title: {
+                        display: true,
+                        text: 'Resumo Total por Produto'
+                    },
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    },
+                    y: {
+                        ticks: {
+                            autoSkip: false
+                        }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+    }
+
+    function updateTabelaPorProduto() {
+        const tbody = document.getElementById("product-summary-table-body");
+        tbody.innerHTML = "";
+
+        const start = new Date(document.getElementById("date_from").value);
+        const end = new Date(document.getElementById("date_to").value);
+        const weekday = document.getElementById("weekday").value;
+
+        let totalProduced = 0, totalFinished = 0, totalSold = 0, totalLeft = 0;
+
+        for (const produto of productList) {
+            let produced = 0, finished = 0, sold = 0, left = 0;
+
+            productDates.forEach((dateStr, i) => {
+                const date = new Date(dateStr.split("/").reverse().join("-"));
+                const wd = date.getDay();
+                if ((isNaN(start) || date >= start) &&
+                    (isNaN(end) || date <= end) &&
+                    (weekday === "" || wd == weekday)) {
+                    produced += producedByProduct[produto][i] || 0;
+                    finished += finishedByProduct[produto][i] || 0;
+                    sold += soldByProduct[produto][i] || 0;
+                    left += leftOverByProduct[produto][i] || 0;
+                }
+            });
+
+            // ❗️Pular produto se tudo for zero no intervalo filtrado
+            if (produced === 0 && finished === 0 && sold === 0 && left === 0) {
+                continue;
+            }
+
+            totalProduced += produced;
+            totalFinished += finished;
+            totalSold += sold;
+            totalLeft += left;
+
+            const row = `
+                <tr>
+                    <td>${produto}</td>
+                    <td>${produced}</td>
+                    <td>${finished}</td>
+                    <td>${sold}</td>
+                    <td>${left}</td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        }
+
+        // Adicionar linha de total
+        const totalRow = `
+            <tr class="font-weight-bold bg-light">
+                <td><strong>Total Geral</strong></td>
+                <td><strong>${totalProduced}</strong></td>
+                <td><strong>${totalFinished}</strong></td>
+                <td><strong>${totalSold}</strong></td>
+                <td><strong>${totalLeft}</strong></td>
+            </tr>
+        `;
+        tbody.innerHTML += totalRow;
+    }
 
     function getAvailableMonths(dates) {
         var months = {};
@@ -403,6 +616,8 @@
 
         productionFinishedChart.update();
         adjustChartHeight(productionFinishedChart, filteredDates);
+        // updateChartPorProduto();
+        updateTabelaPorProduto();
     }
 
     function resetFilters() {

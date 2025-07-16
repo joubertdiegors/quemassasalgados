@@ -27,12 +27,18 @@
 <body class="d-flex justify-content-center align-items-center vh-100 bg-light">
     <div class="container text-center container-custom">
         <h1 class="mb-4">Nosso site está em construção 🚧</h1>
-        <form method="post">
+        {% if not user.is_authenticated %}
+        <form method="post" action="{% url 'login' %}">
             {% csrf_token %}
             <p class="mb-3">Se você tem permissão, digite seu código de acesso logo abaixo:</p>
-            <input type="password" inputmode="numeric" pattern="[0-9]*" name="access_code" class="form-control mb-3" placeholder="Digite o código" required>
+            <input type="password" inputmode="numeric" pattern="[0-9]*" name="code" class="form-control mb-3" placeholder="Digite o código" required>
             <button class="btn btn-primary w-100" type="submit">Entrar</button>
         </form>
+        {% else %}
+        <p>Bem-vindo, {{ user.username }}!</p>
+        <a href="{% url 'dashboard' %}">Ir para o dashboard</a>
+        {% endif %}
+
         {% if messages %}
             <div class="mt-3">
                 {% for message in messages %}

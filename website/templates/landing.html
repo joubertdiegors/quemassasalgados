@@ -1,0 +1,7 @@
+{% extends "base_site.html" %}
+
+{% block title %}Fábrica de Salgados{% endblock %}
+
+{% block content %}
+{% include 'components/_landing_sections.html' with products_by_category=products_by_category %}
+{% endblock %}

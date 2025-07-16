@@ -3,6 +3,7 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.decorators import login_required, permission_required
+from core.mixins import CustomPermissionDeniedMixin
 from products.models import Product
 from .models import Production, ProductionOrder
 from .forms import ProductionOrderForm, ProductionOrderUpdateForm
@@ -10,7 +11,7 @@ from datetime import date
 import json
 from django.http import HttpResponseRedirect
 
-class ProductionOrderListView(PermissionRequiredMixin, LoginRequiredMixin, ListView):
+class ProductionOrderListView(CustomPermissionDeniedMixin, PermissionRequiredMixin, LoginRequiredMixin, ListView):
     model = ProductionOrder
     template_name = 'production_order_list.html'
     context_object_name = 'orders_with_totals'
@@ -28,7 +29,7 @@ class ProductionOrderListView(PermissionRequiredMixin, LoginRequiredMixin, ListV
             })
         return orders_with_totals
 
-class ProductionOrderDetailView(LoginRequiredMixin, DetailView):
+class ProductionOrderDetailView(CustomPermissionDeniedMixin, PermissionRequiredMixin, LoginRequiredMixin, DetailView):
     model = ProductionOrder
     template_name = 'production_order_detail.html'
     context_object_name = 'order'
@@ -54,7 +55,7 @@ class ProductionOrderDetailView(LoginRequiredMixin, DetailView):
         context['total_quantity'] = total_quantity
         return context
 
-class ProductionOrderCreateView(LoginRequiredMixin, FormView):
+class ProductionOrderCreateView(CustomPermissionDeniedMixin, PermissionRequiredMixin, LoginRequiredMixin, FormView):
     template_name = 'production_order_create.html'
     form_class = ProductionOrderForm
     permission_required = 'production.add_productionorder'
@@ -124,7 +125,7 @@ def production_order_update_view(request, pk):
 
     return render(request, 'production_order_update.html', context)
 
-class ProductionOrderDeleteView(PermissionRequiredMixin, LoginRequiredMixin, DeleteView):
+class ProductionOrderDeleteView(CustomPermissionDeniedMixin, PermissionRequiredMixin, LoginRequiredMixin, DeleteView):
     model = ProductionOrder
     template_name = 'production_order_confirm_delete.html'
     success_url = reverse_lazy('production_order_list')

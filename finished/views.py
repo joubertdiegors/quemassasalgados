@@ -15,12 +15,13 @@ from django.http import HttpResponseRedirect
 import json
 import csv
 
-class FinishedOrderListView(PermissionRequiredMixin, LoginRequiredMixin, ListView):
+class FinishedOrderListView(CustomPermissionDeniedMixin, LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = FinishedOrder
     template_name = 'finished_order_list.html'
     context_object_name = 'orders_with_totals'
     permission_required = 'finished.view_finishedorder'
     raise_exception = True
+    redirect_url = 'landing'
 
     def get_queryset(self):
         orders = FinishedOrder.objects.all()
@@ -33,7 +34,7 @@ class FinishedOrderListView(PermissionRequiredMixin, LoginRequiredMixin, ListVie
             })
         return orders_with_totals
 
-class FinishedOrderDetailView(PermissionRequiredMixin, LoginRequiredMixin, DetailView):
+class FinishedOrderDetailView(CustomPermissionDeniedMixin, LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     model = FinishedOrder
     template_name = 'finished_order_detail.html'
     context_object_name = 'finished_order'
@@ -244,7 +245,7 @@ def finished_order_upload(request):
     print("GET request - renderizando o template de upload.")
     return render(request, 'finished_order_upload.html')
 
-class FinishedOrderDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+class FinishedOrderDeleteView(CustomPermissionDeniedMixin, LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = FinishedOrder
     template_name = 'finished_order_confirm_delete.html'
     success_url = reverse_lazy('finished_order_list')

@@ -1,0 +1,124 @@
+{% load static %}
+<header class="bg-white border-bottom shadow-sm sticky-top">
+  <nav class="navbar navbar-expand-lg navbar-light container">
+    
+    <!-- Logomarca -->
+    <a class="navbar-brand" href="#inicio">
+      <img src="{% static 'images/logo.png' %}" alt="Fábrica de Salgados" height="50">
+    </a>
+
+    <!-- Botão do menu no mobile -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain"
+      aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Menu central + ícone à direita -->
+    <div class="collapse navbar-collapse" id="navbarMain">
+      
+      <!-- Menu central -->
+      <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+
+        <!-- Início -->
+        <li class="nav-item">
+          <a class="nav-link" href="#inicio">Início</a>
+        </li>
+
+        <!-- Categorias dinâmicas -->
+        {% for item in menu_categories %}
+          <li class="nav-item">
+            <a class="nav-link" href="#{{ item.name|default:item|slugify }}">
+              {{ item.name|default:item }}
+            </a>
+          </li>
+        {% endfor %}
+
+        <!-- Contato -->
+        <li class="nav-item">
+          <a class="nav-link" href="#contact">Contato</a>
+        </li>
+      </ul>
+
+      <!-- Ícone para login -->
+      {% if request.user.is_authenticated %}
+        <!-- Mostra nome do usuário -->
+        <div class="d-flex align-items-center gap-2">
+          <span class="fw-bold text-muted">{{ request.user.first_name|default:request.user.username }}</span>
+          <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm" title="Sair">
+            <i class="bi bi-box-arrow-right"></i>
+          </a>
+        </div>
+      {% else %}
+        <!-- Ícone de login -->
+        <button class="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center"
+                style="width: 40px; height: 40px;" title="Área do Cliente"
+                data-bs-toggle="modal" data-bs-target="#loginModal">
+          <i class="bi bi-person"></i>
+        </button>
+      {% endif %}
+
+    </div>
+  </nav>
+
+  
+</header>
+
+<!-- Modal de Login -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content p-3">
+      <div class="modal-header">
+        <h5 class="modal-title" id="loginModalLabel">Área de Acesso</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <!-- Abas -->
+      <ul class="nav nav-tabs justify-content-center mb-3" id="loginTab" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="cliente-tab" data-bs-toggle="tab" data-bs-target="#cliente" type="button" role="tab">
+            Cliente
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="funcionario-tab" data-bs-toggle="tab" data-bs-target="#funcionario" type="button" role="tab">
+            Funcionário
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content" id="loginTabContent">
+        <!-- Formulário do Cliente -->
+        <div class="tab-pane fade show active" id="cliente" role="tabpanel">
+          <form method="post" action="{% url 'login_cliente' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="username" class="form-label">Usuário</label>
+              <input type="text" class="form-control" name="username" required placeholder="Digite seu login">
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Senha</label>
+              <input type="password" class="form-control" name="password" required placeholder="Digite sua senha">
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-danger w-100">Entrar</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Formulário do Funcionário -->
+        <div class="tab-pane fade" id="funcionario" role="tabpanel">
+          <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="access_code" class="form-label">Código de Acesso</label>
+              <input type="password" class="form-control" name="code" required placeholder="Digite o código do funcionário">
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-danger w-100">Entrar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

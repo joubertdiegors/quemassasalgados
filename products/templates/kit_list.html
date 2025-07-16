@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Kits{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Kits</h2>
+  <a href="{% url 'kit_create' %}" class="btn btn-success mb-3">Novo Kit</a>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Ativo?</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for kit in kits %}
+      <tr>
+        <td>{{ kit.name }}</td>
+        <td>{{ kit.is_active|yesno:"Sim,Não" }}</td>
+        <td>
+          <a href="{% url 'kit_update' kit.pk %}" class="btn btn-sm btn-primary">Editar</a>
+          <a href="{% url 'kit_duplicate' kit.pk %}" class="btn btn-sm btn-outline-secondary">Duplicar</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="3">Nenhum kit cadastrado.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
