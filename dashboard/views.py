@@ -15,7 +15,7 @@ import json
 
 from core.decorators import staff_required
 
-@group_required_any(["Atendimento", "Cozinha"])
+@group_required_any(["ADM",  "ALL", "Atendimento", "Cozinha"])
 def dashboard_view(request):
     # Coletar os dados brutos do banco de dados para FinishedProduct (Finalizados)
     finished_products = FinishedProduct.objects.all()
