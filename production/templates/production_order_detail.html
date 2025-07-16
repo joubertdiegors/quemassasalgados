@@ -30,7 +30,7 @@
 
     function copyToClipboard() {
         var text = 'Salgados Que Massa - Produzidos\n';
-        text += '{{ production_data.0.date|date:"d/m/Y" }}\n\n' + userName + '\n\n';
+        text += '{{ production_data.0.date|date:"d/m/Y" }} - _' + userName + '_\n\n';
 
         var listItems = document.querySelectorAll('#production-summary-list li');
         listItems.forEach(function(item) {
