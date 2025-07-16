@@ -14,7 +14,7 @@ def staff_required(view_func):
 
 def group_required_any(group_names):
     def check(user):
-        if user.is_authenticated and user.groups.filter(name__in=group_names).exists():
+        if user.is_authenticated and (user.is_staff or user.groups.filter(name__in=group_names).exists()):
             return True
         raise PermissionDenied
     return user_passes_test(check)
