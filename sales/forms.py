@@ -1,13 +1,16 @@
 from django import forms
-from django.utils.timezone import now
+from django.utils.timezone import now, localtime
 from products.models import Product
 from .models import SalesOrder, SalesProduct, LeftoverOrder
 
 class SalesOrderForm(forms.Form):
     sale_date = forms.DateField(
         label='Data da Venda',
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control form-control-sm w-auto'}),
-        initial=now().date,
+        widget=forms.DateInput(attrs={
+            'type': 'date',
+            'class': 'form-control form-control-sm w-auto'
+        }),
+        initial=localtime(now()).date(),  # <- Aqui está o ajuste
         required=True
     )
     products = forms.ModelMultipleChoiceField(
